@@ -20,8 +20,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    volumes:
-      - ./backend:/app
     networks:
       - markup
 

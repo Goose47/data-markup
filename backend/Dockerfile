@@ -10,5 +10,6 @@ FROM alpine
 WORKDIR /app
 COPY --from=builder /build/app /app/app
 COPY ./config ./config
-
-CMD ["./app", "--config=./config/config.yml"]
+RUN ls -la
+RUN "pwd"
+CMD ["./app", "--config=./config/local.yml"]
