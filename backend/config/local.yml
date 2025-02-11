@@ -1,0 +1,8 @@
+env: "local"
+port: 8000
+db:
+  user: "root"
+  pass: "root"
+  dbname: "markup"
+  host: "postgres"
+  port: 5432
