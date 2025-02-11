@@ -49,7 +49,7 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    command: certonly --webroot -w /var/www/certbot/ --email test@gmail.com -d api.rwfsh39.ru -d rwfsh39.ru --agree-tos --cert-name markup
+    command: certonly --webroot -w /var/www/certbot/ --email test@gmail.com -d api.rwfshr.ru -d rwfshr.ru --agree-tos --cert-name markup
 
 networks:
   markup:
