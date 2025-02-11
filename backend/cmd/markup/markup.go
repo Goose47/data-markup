@@ -11,7 +11,7 @@ import (
 func main() {
 	cfg := config.MustLoad()
 	log := logger.New(cfg.Env)
-	app := apppkg.New(log, cfg.Env, cfg.Port)
+	app := apppkg.New(log, cfg.Env, cfg.Port, cfg.DB)
 
 	err := app.Server.Serve()
 	log.Error("application has stopped: %s", slog.Any("error", err))
