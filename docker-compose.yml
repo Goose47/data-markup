@@ -1,0 +1,62 @@
+version: '3'
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certbot/www:/var/www/certbot/
+      - ./certbot/conf:/etc/letsencrypt/
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - markup
+
+  api:
+    container_name: api
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app
+    networks:
+      - markup
+
+  react:
+    container_name: react
+    restart: unless-stopped
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - markup
+
+  postgres:
+    container_name: postgres
+    restart: unless-stopped
+    image: postgres:14
+    env_file:
+      - ./postgres/.env
+    volumes:
+      - markup-pgsql-volume:/var/lib/postgresql/data
+    networks:
+      - markup
+
+  certbot:
+    image: certbot/certbot
+    container_name: markup_certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    command: certonly --webroot -w /var/www/certbot/ --email test@gmail.com -d api.rwfsh39.ru -d rwfsh39.ru --agree-tos --cert-name markup
+
+networks:
+  markup:
+    driver: bridge
+
+volumes:
+  markup-pgsql-volume:
+    driver: local
