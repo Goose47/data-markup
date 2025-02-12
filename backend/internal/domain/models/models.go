@@ -27,71 +27,73 @@ type Permission struct {
 }
 
 type Batch struct {
-	ID        uint   `gorm:"primaryKey"`
-	Name      string `gorm:"not null"`
-	Overlaps  int
-	Priority  int
-	CreatedAt time.Time
-	IsActive  bool
-	Markups   []Markup `gorm:"foreignKey:BatchID;references:ID"`
-	Users     []User   `gorm:"many2many:user_batches;"`
+	ID        uint      `json:"id" gorm:"primaryKey"`
+	Name      string    `json:"name" gorm:"not null"`
+	Overlaps  int       `json:"overlaps"`
+	Priority  int       `json:"priority"`
+	CreatedAt time.Time `json:"created_at"`
+	IsActive  bool      `json:"is_active"`
+	Markups   []Markup  `json:"-" gorm:"foreignKey:BatchID;references:ID"`
+	Users     []User    `json:"-" gorm:"many2many:user_batches;"`
 }
 
 //type UserBatch struct {
 //	ID      uint  `gorm:"primaryKey"`
-//	UserID  uint  `gorm:"index"`
-//	BatchID uint  `gorm:"index"`
+//	UserID  uint  ``
+//	BatchID uint  ``
 //	User    User  `gorm:"foreignKey:UserID;references:ID"`
 //	Batch   Batch `gorm:"foreignKey:BatchID;references:ID"`
 //}
 
 type Markup struct {
-	ID          uint         `gorm:"primaryKey"`
-	BatchID     uint         `gorm:"index"`
-	Data        string       `gorm:"type:text"`
-	Batch       Batch        `gorm:"foreignKey:BatchID;references:ID"`
-	Assessments []Assessment `gorm:"foreignKey:MarkupID;references:ID"`
+	ID          uint         `json:"id" gorm:"primaryKey"`
+	BatchID     uint         `json:"batch_id"`
+	Data        string       `json:"data" gorm:"type:text"`
+	Batch       Batch        `json:"-" gorm:"foreignKey:BatchID;references:ID"`
+	Assessments []Assessment `json:"assessments" gorm:"foreignKey:MarkupID;references:ID"`
 }
 
 type MarkupType struct {
-	ID      uint   `gorm:"primaryKey"`
-	BatchID uint   `gorm:"index"`
-	Name    string `gorm:"not null"`
-	ChildID *uint
-	Fields  []MarkupTypeField `gorm:"foreignKey:MarkupTypeID;references:ID"`
-	Batch   Batch             `gorm:"foreignKey:BatchID;references:ID"`
+	ID      uint              `gorm:"primaryKey" json:"id"`
+	BatchID *uint             `gorm:"null" json:"batch_id"`
+	Name    string            `gorm:"not null" json:"name"`
+	ChildID *uint             `gorm:"null" json:"child_id"`
+	UserID  *uint             `gorm:"null" json:"user_id"`
+	Fields  []MarkupTypeField `gorm:"foreignKey:MarkupTypeID;references:ID;onDelete:CASCADE" json:"fields"`
+	Batch   Batch             `gorm:"foreignKey:BatchID;references:ID" json:"-"`
 }
 
 type MarkupTypeField struct {
-	ID               uint   `gorm:"primaryKey"`
-	MarkupTypeID     uint   `gorm:"index"`
-	AssessmentTypeID uint   `gorm:"index"`
-	Name             string `gorm:"not null"`
-	GroupID          uint
-	MarkupType       MarkupType     `gorm:"foreignKey:MarkupTypeID;references:ID"`
-	AssessmentType   AssessmentType `gorm:"foreignKey:AssessmentTypeID;references:ID"`
+	ID               uint           `gorm:"primaryKey" json:"id"`
+	MarkupTypeID     uint           `json:"markup_type_id"`
+	AssessmentTypeID uint           `json:"assessment_type_id"`
+	Name             string         `gorm:"not null" json:"name"`
+	GroupID          uint           `json:"group_id"`
+	MarkupType       MarkupType     `gorm:"foreignKey:MarkupTypeID;references:ID" json:"-"`
+	AssessmentType   AssessmentType `gorm:"foreignKey:AssessmentTypeID;references:ID" json:"assessment_type"`
 }
 
 type AssessmentType struct {
-	ID   uint   `gorm:"primaryKey"`
-	Name string `gorm:"not null"`
+	ID   uint   `gorm:"primaryKey" json:"id"`
+	Name string `gorm:"not null" json:"name"`
 }
 
 type Assessment struct {
-	ID        uint `gorm:"primaryKey"`
-	UserID    uint `gorm:"index"`
-	MarkupID  uint `gorm:"index"`
-	CreatedAt time.Time
-	IsPrior   bool
-	Fields    []AssessmentField `gorm:"foreignKey:AssessmentID;references:ID"`
-	User      User              `gorm:"foreignKey:UserID;references:ID"`
-	Markup    Markup            `gorm:"foreignKey:MarkupID;references:ID"`
+	ID        uint              `json:"id" gorm:"primaryKey"`
+	UserID    uint              `json:"user_id"`
+	MarkupID  uint              `json:"markup_id"`
+	CreatedAt time.Time         `json:"created_at"`
+	IsPrior   bool              `json:"is_prior"`
+	Fields    []AssessmentField `json:"fields" gorm:"foreignKey:AssessmentID;references:ID"`
+	User      User              `json:"-" gorm:"foreignKey:UserID;references:ID"`
+	Markup    Markup            `json:"-" gorm:"foreignKey:MarkupID;references:ID"`
 }
 
 type AssessmentField struct {
 	ID                uint            `gorm:"primaryKey"`
-	AssessmentID      uint            `gorm:"index"`
-	MarkupTypeFieldID uint            `gorm:"index"`
+	AssessmentID      uint            ``
+	MarkupTypeFieldID uint            ``
+	Text              *string         ``
 	Assessment        Assessment      `gorm:"foreignKey:AssessmentID;references:ID"`
 	MarkupTypeField   MarkupTypeField `gorm:"foreignKey:MarkupTypeFieldID;references:ID"`
 }
