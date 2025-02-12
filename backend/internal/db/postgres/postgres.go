@@ -5,6 +5,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"markup/internal/domain/models"
 )
 
 func New(host string, port int, user string, pass string, dbname string) (*gorm.DB, error) {
@@ -20,6 +21,16 @@ func New(host string, port int, user string, pass string, dbname string) (*gorm.
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	err = db.AutoMigrate(
+		&models.User{}, &models.Role{}, &models.Permission{},
+		&models.Batch{}, &models.Markup{}, &models.MarkupType{},
+		&models.MarkupTypeField{}, &models.AssessmentType{},
+		&models.Assessment{}, &models.AssessmentField{},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
