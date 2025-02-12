@@ -1,0 +1,37 @@
+@use '../../variables.scss';
+
+$block: '.#{variables.$ns}sidebar';
+
+#{$block} {
+    max-width: 200px;
+    flex: 0 0 200px;
+    font-size: 16px;
+    padding: 15px;
+    &__user {
+        margin-bottom: 15px;
+    }
+    &__button {
+        margin-top: 15px;
+        margin-bottom: 15px;
+    }
+    &__navigation {
+        margin-top: 30px;
+        margin-left: -15px;
+        ul {
+            margin: 0;
+            padding-left: 15px;
+            li {
+                list-style: none;
+                margin-bottom: 15px;
+                a {
+                    color: #{variables.$dark};
+                    text-decoration: none;
+                    &._active {
+                        font-weight: 500;
+                        color: var(--g-color-base-brand)
+                    }
+                }
+            }
+        }
+    }
+}

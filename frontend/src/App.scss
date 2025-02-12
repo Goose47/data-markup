@@ -1,0 +1,16 @@
+@use './variables.scss';
+
+$block: '.#{variables.$ns}app';
+
+#{$block} {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    &__wrapper {
+        width: 1200px;
+        padding: 0;
+        display: flex;
+        gap: 15px;
+    }
+}
