@@ -14,6 +14,8 @@ func NewRouter(
 	env string,
 	helloCon *controllers.HelloController,
 	markupTypeCon *controllers.MarkupType,
+	batchCon *controllers.Batch,
+	markupCon *controllers.Markup,
 ) *gin.Engine {
 	var mode string
 	switch env {
@@ -44,6 +46,19 @@ func NewRouter(
 				markupTypes.POST("", markupTypeCon.Store)
 				markupTypes.PUT("/:id", markupTypeCon.Update)
 				markupTypes.DELETE("/:id", markupTypeCon.Destroy)
+			}
+			batches := v1.Group("/batches")
+			{
+				batches.GET("", batchCon.Index)
+				batches.GET("/:id", batchCon.Find)
+				batches.POST("", batchCon.Store)
+				batches.PUT("/:id", batchCon.Update)
+				batches.DELETE("/:id", batchCon.Destroy)
+			}
+			markups := v1.Group("/markups")
+			{
+				markups.GET("", markupCon.Index)
+				markups.GET("/:id", markupCon.Find)
 			}
 		}
 	}
