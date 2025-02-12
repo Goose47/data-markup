@@ -8,7 +8,6 @@ import (
 	"markup/internal/config"
 	"markup/internal/controllers"
 	"markup/internal/db/postgres"
-
 	//"markup/internal/db/mysql"
 	"markup/internal/repos"
 	"markup/internal/server"
@@ -44,8 +43,17 @@ func New(
 
 	helloCon := controllers.NewHelloController(log, helloService)
 	markupTypeCon := controllers.NewMarkupType(log, db)
+	batchCon := controllers.NewBatch(log, db)
+	markupCon := controllers.NewMarkup(log, db)
 
-	router := server.NewRouter(log, env, helloCon, markupTypeCon)
+	router := server.NewRouter(
+		log,
+		env,
+		helloCon,
+		markupTypeCon,
+		batchCon,
+		markupCon,
+	)
 	serverApp := serverapp.New(log, port, router)
 
 	return &App{
