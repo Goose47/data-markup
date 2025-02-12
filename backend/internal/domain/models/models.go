@@ -93,6 +93,7 @@ type AssessmentField struct {
 	ID                uint            `gorm:"primaryKey"`
 	AssessmentID      uint            ``
 	MarkupTypeFieldID uint            ``
+	Text              *string         ``
 	Assessment        Assessment      `gorm:"foreignKey:AssessmentID;references:ID"`
 	MarkupTypeField   MarkupTypeField `gorm:"foreignKey:MarkupTypeFieldID;references:ID"`
 }
