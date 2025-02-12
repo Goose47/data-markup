@@ -15,4 +15,4 @@ WORKDIR /app
 COPY --from=builder /build/app /app/app
 COPY ./config ./config
 
-CMD ["./app", "--config=./config/local.yml"]
+CMD ["./app", "--config=./config/dev.yml"]

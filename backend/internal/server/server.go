@@ -13,6 +13,7 @@ func NewRouter(
 	log *slog.Logger,
 	env string,
 	helloCon *controllers.HelloController,
+	markupTypeCon *controllers.MarkupType,
 ) *gin.Engine {
 	var mode string
 	switch env {
@@ -32,6 +33,20 @@ func NewRouter(
 	r.Use(gin.Recovery())
 
 	r.GET("hello", helloCon.Hello)
+	api := r.Group("/api")
+	{
+		v1 := api.Group("/v1")
+		{
+			markupTypes := v1.Group("/markupTypes")
+			{
+				markupTypes.GET("", markupTypeCon.Index)
+				markupTypes.GET("/:id", markupTypeCon.Find)
+				markupTypes.POST("", markupTypeCon.Store)
+				markupTypes.PUT("/:id", markupTypeCon.Update)
+				markupTypes.DELETE("/:id", markupTypeCon.Destroy)
+			}
+		}
+	}
 
 	return r
 }

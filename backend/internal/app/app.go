@@ -7,7 +7,7 @@ import (
 	serverapp "markup/internal/app/server"
 	"markup/internal/config"
 	"markup/internal/controllers"
-	"markup/internal/db/postgres"
+	"markup/internal/db/mysql"
 	"markup/internal/repos"
 	"markup/internal/server"
 	"markup/internal/services"
@@ -30,7 +30,7 @@ func New(
 	port int,
 	dbConfig config.DB,
 ) *App {
-	db, err := postgres.New(dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Pass, dbConfig.DBName)
+	db, err := mysql.New(dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Pass, dbConfig.DBName)
 	if err != nil {
 		panic(err)
 	}
@@ -40,8 +40,9 @@ func New(
 	helloService := services.NewHelloService(log, helloRepo)
 
 	helloCon := controllers.NewHelloController(log, helloService)
+	markupTypeCon := controllers.NewMarkupType(log, db)
 
-	router := server.NewRouter(log, env, helloCon)
+	router := server.NewRouter(log, env, helloCon, markupTypeCon)
 	serverApp := serverapp.New(log, port, router)
 
 	return &App{
