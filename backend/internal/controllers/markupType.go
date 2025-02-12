@@ -30,7 +30,7 @@ func (con *MarkupType) Index(c *gin.Context) {
 	const op = "MarkupTypeController.Index"
 	log := con.log.With(slog.String("op", op))
 
-	var markups []MarkupType
+	var markups []models.MarkupType
 
 	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if err != nil {
@@ -51,7 +51,7 @@ func (con *MarkupType) Index(c *gin.Context) {
 	offset := (page - 1) * perPage
 
 	var total int64
-	con.db.Model(&MarkupType{}).Count(&total)
+	con.db.Model(&models.MarkupType{}).Count(&total)
 
 	con.db.Limit(perPage).Offset(offset).Find(&markups)
 
