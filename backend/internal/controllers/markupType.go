@@ -266,7 +266,7 @@ func (con *MarkupType) Update(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, "OK")
 }
 
 func (con *MarkupType) Destroy(c *gin.Context) {
@@ -308,5 +308,5 @@ func (con *MarkupType) Destroy(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusNotImplemented, nil)
+	c.JSON(http.StatusOK, "OK")
 }
