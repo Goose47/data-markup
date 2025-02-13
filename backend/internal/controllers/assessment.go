@@ -239,13 +239,6 @@ func (con *Assessment) Update(c *gin.Context) {
 		assessment.Fields[i] = nextField
 	}
 
-	if err := tx.Save(&assessment).Error; err != nil {
-		tx.Rollback()
-		log.Error("failed to update assessment fields", slog.Any("error", err))
-		responses.InternalServerError(c)
-		return
-	}
-
 	result := tx.Where("assessment_id = ? AND id NOT IN ?", assessment.ID, processedIds).Delete(&models.AssessmentField{})
 	if err := result.Error; err != nil {
 		tx.Rollback()
