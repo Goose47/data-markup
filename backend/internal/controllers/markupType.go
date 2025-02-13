@@ -139,6 +139,7 @@ func (con *MarkupType) Store(c *gin.Context) {
 		UserID: userID,
 	}
 
+	// todo: make only one query to save all models. See Assesment.Store
 	if err := tx.Create(&markupType).Error; err != nil {
 		tx.Rollback()
 		log.Error("failed to create markup type", slog.Any("error", err))
