@@ -154,13 +154,15 @@ func (con *Assessment) Store(c *gin.Context) {
 }
 
 type updateAssessment struct {
-	MarkupID uint `binding:"required" json:"markup_id"`
-	Fields   []struct {
+	Fields []struct {
 		ID *uint `json:"id"`
 		storeAssessmentField
 	} `binding:"required,dive" json:"fields"`
 }
 
+// todo: can steal another assessment fields if their ids are passed in storeAssessmentField.
+// todo: check if specified AssessmentField ids belong to respective Assessment.
+// todo: same in MarkupType.Update.
 func (con *Assessment) Update(c *gin.Context) {
 	const op = "AssessmentController.Update"
 	id := c.Param("id")
