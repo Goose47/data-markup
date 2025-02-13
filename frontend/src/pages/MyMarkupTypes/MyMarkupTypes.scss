@@ -1,0 +1,25 @@
+@use '../../variables.scss';
+$block: '.#{variables.$ns}my-markup-types';
+
+#{$block} {
+    
+    margin-top: 15px;
+    width: 600px;
+
+    h1 {
+        font-size: 26px;
+        font-weight: 800;
+    }
+
+    p {
+        font-size: 16px;
+        line-height: 20px;
+        margin-bottom: 30px;
+    }
+
+    &__list {
+        max-width: 600px;
+        width: 100%;
+    }
+
+}

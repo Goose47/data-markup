@@ -1,0 +1,39 @@
+@use '../../variables.scss';
+$block: '.#{variables.$ns}my-markup-type';
+
+#{$block} {
+    &__card {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    &__wrapper {
+        width: 100%;
+    }
+    h2 {
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+
+    &__edit, &__delete {
+        position: absolute;
+        right: -30px;
+        top: 15px;
+        cursor: pointer;
+        svg {
+            transition: 0.2s;
+        }
+        &:hover {
+            svg {
+                color: var(--g-color-base-brand);
+            }
+        }
+       
+    }
+    &__delete {
+        right: -60px
+    }
+    position: relative;
+}

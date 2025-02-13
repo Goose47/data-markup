@@ -1,5 +1,5 @@
 @use '../../variables.scss';
-$block: '.#{variables.$ns}markup-create';
+$block: '.#{variables.$ns}markup-edit';
 
 #{$block} {
     margin-top: 15px;

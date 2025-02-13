@@ -4,7 +4,9 @@ import { block } from "./utils/block";
 
 import "./App.scss";
 import { Sidebar } from "./components/Sidebar/Sidebar";
-import { MarkupCreate } from "./components/MarkupCreate/MarkupCreate";
+import { MyMarkupTypes } from "./pages/MyMarkupTypes/MyMarkupTypes";
+import { MarkupCreate } from "./pages/MarkupCreate/MarkupCreate";
+import { MarkupEdit } from "./pages/MarkupEdit/MarkupEdit";
 
 const b = block("app");
 
@@ -14,10 +16,14 @@ export const App = () => {
       <div className={b()}>
         <div className={b("wrapper")}>
           <Sidebar />
-          <Routes>
-            <Route path="/" element={<Home />}></Route>
-            <Route path="/markup/create" element={<MarkupCreate />}></Route>
-          </Routes>
+          <div className={b("content")}>
+            <Routes>
+              <Route path="/" element={<Home />}></Route>
+              <Route path="/markup/create" element={<MarkupCreate />}></Route>
+              <Route path="/markup" element={<MyMarkupTypes />}></Route>
+              <Route path="/markup/:id" element={<MarkupEdit />}></Route>
+            </Routes>
+          </div>
         </div>
       </div>
     </BrowserRouter>
