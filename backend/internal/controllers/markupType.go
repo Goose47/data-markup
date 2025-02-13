@@ -128,8 +128,8 @@ func (con *MarkupType) Store(c *gin.Context) {
 	}
 
 	tx := con.db.Begin()
-	if tx.Error != nil {
-		log.Error("failed to begin transaction", slog.Any("error", tx.Error))
+	if err := tx.Error; err != nil {
+		log.Error("failed to begin transaction", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -141,7 +141,7 @@ func (con *MarkupType) Store(c *gin.Context) {
 
 	if err := tx.Create(&markupType).Error; err != nil {
 		tx.Rollback()
-		log.Error("failed to create markup type", slog.Any("error", tx.Error))
+		log.Error("failed to create markup type", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -159,13 +159,13 @@ func (con *MarkupType) Store(c *gin.Context) {
 
 	if err := tx.Create(&fields).Error; err != nil {
 		tx.Rollback()
-		log.Error("failed to create markup type fields", slog.Any("error", tx.Error))
+		log.Error("failed to create markup type fields", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		log.Error("failed to commit transaction", slog.Any("error", tx.Error))
+		log.Error("failed to commit transaction", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -224,8 +224,8 @@ func (con *MarkupType) Update(c *gin.Context) {
 	}
 
 	tx := con.db.Begin()
-	if tx.Error != nil {
-		log.Error("failed to begin transaction", slog.Any("error", tx.Error))
+	if err := tx.Error; err != nil {
+		log.Error("failed to begin transaction", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -234,7 +234,7 @@ func (con *MarkupType) Update(c *gin.Context) {
 
 	if err := tx.Save(&markupType).Error; err != nil {
 		tx.Rollback()
-		log.Error("failed to update markup type", slog.Any("error", tx.Error))
+		log.Error("failed to update markup type", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -254,7 +254,7 @@ func (con *MarkupType) Update(c *gin.Context) {
 			nextField.ID = *field.ID
 			if err := tx.Save(&nextField).Error; err != nil {
 				tx.Rollback()
-				log.Error("failed to update markup type field", slog.Any("error", tx.Error))
+				log.Error("failed to update markup type field", slog.Any("error", err))
 				responses.InternalServerError(c)
 				return
 			}
@@ -264,7 +264,7 @@ func (con *MarkupType) Update(c *gin.Context) {
 
 		if err := tx.Create(&nextField).Error; err != nil {
 			tx.Rollback()
-			log.Error("failed to create markup type field", slog.Any("error", tx.Error))
+			log.Error("failed to create markup type field", slog.Any("error", err))
 			responses.InternalServerError(c)
 			return
 		}
@@ -272,15 +272,15 @@ func (con *MarkupType) Update(c *gin.Context) {
 	}
 
 	result := tx.Where("markup_type_id = ? AND id NOT IN ?", markupType.ID, processedIds).Delete(&models.MarkupTypeField{})
-	if result.Error != nil {
+	if err := result.Error; err != nil {
 		tx.Rollback()
-		log.Error("failed to delete markup type fields", slog.Any("error", tx.Error))
+		log.Error("failed to delete markup type fields", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		log.Error("failed to commit transaction", slog.Any("error", tx.Error))
+		log.Error("failed to commit transaction", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}

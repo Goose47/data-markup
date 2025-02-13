@@ -1,3 +1,4 @@
+// Package responses provides functions to send frequently used http responses.
 package responses
 
 import (
@@ -24,5 +25,11 @@ func Pagination(
 func InternalServerError(c *gin.Context) {
 	c.JSON(http.StatusInternalServerError, gin.H{
 		"error": "internal server error",
+	})
+}
+
+func NotFoundError(c *gin.Context) {
+	c.JSON(http.StatusNotFound, gin.H{
+		"error": "not found",
 	})
 }

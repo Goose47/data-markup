@@ -133,8 +133,8 @@ func (con *Batch) Store(c *gin.Context) {
 	}
 
 	tx := con.db.Begin()
-	if tx.Error != nil {
-		log.Error("failed to begin transaction", slog.Any("error", tx.Error))
+	if err := tx.Error; err != nil {
+		log.Error("failed to begin transaction", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -174,7 +174,7 @@ func (con *Batch) Store(c *gin.Context) {
 
 	if err := tx.Create(&batch).Error; err != nil {
 		tx.Rollback()
-		log.Error("failed to create batch", slog.Any("error", tx.Error))
+		log.Error("failed to create batch", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -255,7 +255,7 @@ func (con *Batch) Store(c *gin.Context) {
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		log.Error("failed to commit transaction", slog.Any("error", tx.Error))
+		log.Error("failed to commit transaction", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -345,8 +345,8 @@ func (con *Batch) TieMarkupType(c *gin.Context) {
 	}
 
 	tx := con.db.Begin()
-	if tx.Error != nil {
-		log.Error("failed to begin transaction", slog.Any("error", tx.Error))
+	if err := tx.Error; err != nil {
+		log.Error("failed to begin transaction", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -396,7 +396,7 @@ func (con *Batch) TieMarkupType(c *gin.Context) {
 	markupType.BatchID = &data.BatchID
 	if err := tx.Save(&markupType).Error; err != nil {
 		tx.Rollback()
-		log.Error("failed to update markup type field", slog.Any("error", tx.Error))
+		log.Error("failed to update markup type field", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}

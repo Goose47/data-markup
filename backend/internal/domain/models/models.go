@@ -84,6 +84,7 @@ type Assessment struct {
 	UserID    uint              `json:"user_id"`
 	MarkupID  uint              `json:"markup_id"`
 	CreatedAt time.Time         `json:"created_at"`
+	UpdatedAt *time.Time        `json:"updated_at" gorm:"autoUpdateTime"`
 	IsPrior   bool              `json:"is_prior"`
 	Fields    []AssessmentField `json:"fields" gorm:"foreignKey:AssessmentID;references:ID"`
 	User      User              `json:"-" gorm:"foreignKey:UserID;references:ID"`
@@ -91,10 +92,10 @@ type Assessment struct {
 }
 
 type AssessmentField struct {
-	ID                uint            `gorm:"primaryKey"`
-	AssessmentID      uint            ``
-	MarkupTypeFieldID uint            ``
-	Text              *string         ``
-	Assessment        Assessment      `gorm:"foreignKey:AssessmentID;references:ID"`
-	MarkupTypeField   MarkupTypeField `gorm:"foreignKey:MarkupTypeFieldID;references:ID"`
+	ID                uint            `json:"id" gorm:"primaryKey"`
+	AssessmentID      uint            `json:"assessment_id"`
+	MarkupTypeFieldID uint            `json:"markup_type_field_id"`
+	Text              *string         `json:"text"`
+	Assessment        Assessment      `json:"-" gorm:"foreignKey:AssessmentID;references:ID"`
+	MarkupTypeField   MarkupTypeField `json:"-" gorm:"foreignKey:MarkupTypeFieldID;references:ID"`
 }

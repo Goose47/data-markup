@@ -45,6 +45,7 @@ func New(
 	markupTypeCon := controllers.NewMarkupType(log, db)
 	batchCon := controllers.NewBatch(log, db)
 	markupCon := controllers.NewMarkup(log, db)
+	assessmentCon := controllers.NewAssessment(log, db)
 
 	router := server.NewRouter(
 		log,
@@ -53,6 +54,7 @@ func New(
 		markupTypeCon,
 		batchCon,
 		markupCon,
+		assessmentCon,
 	)
 	serverApp := serverapp.New(log, port, router)
 
