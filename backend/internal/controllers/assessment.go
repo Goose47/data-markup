@@ -202,13 +202,6 @@ func (con *Assessment) Update(c *gin.Context) {
 		return
 	}
 
-	tx := con.db.Begin()
-	if err := tx.Error; err != nil {
-		log.Error("failed to begin transaction", slog.Any("error", err))
-		responses.InternalServerError(c)
-		return
-	}
-
 	assessment.Fields = make([]models.AssessmentField, len(data.Fields))
 	for i, field := range data.Fields {
 		nextField := models.AssessmentField{
@@ -223,28 +216,8 @@ func (con *Assessment) Update(c *gin.Context) {
 		assessment.Fields[i] = nextField
 	}
 
-	if err := tx.Save(&assessment).Error; err != nil {
-		tx.Rollback()
+	if err := con.db.Model(&assessment).Association("Fields").Replace(assessment.Fields); err != nil {
 		log.Error("failed to update assessment fields", slog.Any("error", err))
-		responses.InternalServerError(c)
-		return
-	}
-
-	processedIds := make([]uint, len(data.Fields))
-	for i, field := range assessment.Fields {
-		processedIds[i] = field.ID
-	}
-
-	result := tx.Where("assessment_id = ? AND id NOT IN ?", assessment.ID, processedIds).Delete(&models.AssessmentField{})
-	if err := result.Error; err != nil {
-		tx.Rollback()
-		log.Error("failed to delete assessment fields", slog.Any("error", err))
-		responses.InternalServerError(c)
-		return
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		log.Error("failed to commit transaction", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
