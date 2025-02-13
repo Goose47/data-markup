@@ -325,3 +325,117 @@ func (con *Batch) Destroy(c *gin.Context) {
 
 	c.JSON(http.StatusNotImplemented, nil)
 }
+
+type tieMarkupType struct {
+	BatchID      uint  `binding:"required" json:"batch_id"`
+	MarkupTypeID *uint `json:"markup_type_id"`
+	storeMarkupType
+}
+
+func (con *Batch) TieMarkupType(c *gin.Context) {
+	const op = "BatchController.TieMarkupType"
+	id := c.Param("id")
+
+	log := con.log.With(slog.String("op", op), slog.String("id", id))
+
+	var data tieMarkupType
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	tx := con.db.Begin()
+	if tx.Error != nil {
+		log.Error("failed to begin transaction", slog.Any("error", tx.Error))
+		responses.InternalServerError(c)
+		return
+	}
+
+	var markupType models.MarkupType
+	if data.MarkupTypeID != nil {
+		err := con.db.
+			Preload("Fields.AssessmentType").
+			Where("id = ?", id).
+			First(&markupType).Error
+
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				log.Warn("markupType not found")
+				c.JSON(http.StatusNotFound, gin.H{
+					"error": "markupType not found",
+				})
+				return
+			}
+
+			log.Error("failed to find markupType", slog.Any("error", err))
+			responses.InternalServerError(c)
+			return
+		}
+
+		markupType.ID = 0
+		for _, field := range markupType.Fields {
+			field.ID = 0
+			field.MarkupTypeID = 0
+		}
+	} else {
+		markupType = models.MarkupType{
+			Name: data.Name,
+		}
+		markupType.Fields = make([]models.MarkupTypeField, 0, len(data.Fields))
+		for _, field := range data.Fields {
+			nextField := models.MarkupTypeField{
+				AssessmentTypeID: field.AssessmentTypeID,
+				Name:             field.Name,
+				Label:            field.Label,
+				GroupID:          field.GroupID,
+			}
+			markupType.Fields = append(markupType.Fields, nextField)
+		}
+	}
+
+	markupType.BatchID = &data.BatchID
+	if err := tx.Save(&markupType).Error; err != nil {
+		tx.Rollback()
+		log.Error("failed to update markup type field", slog.Any("error", tx.Error))
+		responses.InternalServerError(c)
+		return
+	}
+
+	// Set child id of last MarkupType (parent).
+	var lastMarkupType models.MarkupType
+
+	err := tx.
+		Where(
+			"batch_id = ? AND id != ? AND child_id IS NULL",
+			markupType.BatchID,
+			markupType.ID,
+		).
+		First(&lastMarkupType).
+		Error
+
+	if err != nil {
+		// If parent is not found than it is first MarkupType of batch. No parent exist
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			tx.Rollback()
+			log.Error("failed to find last markup type field", slog.Any("error", err))
+			responses.InternalServerError(c)
+			return
+		}
+	} else {
+		lastMarkupType.ChildID = &markupType.ID
+		if err := tx.Save(&lastMarkupType).Error; err != nil {
+			tx.Rollback()
+			log.Error("failed to update parent markup type field", slog.Any("error", err))
+			responses.InternalServerError(c)
+			return
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Error("failed to commit transaction", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+
+	c.JSON(http.StatusOK, "OK")
+}
