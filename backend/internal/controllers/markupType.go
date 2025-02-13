@@ -32,6 +32,15 @@ func (con *MarkupType) Index(c *gin.Context) {
 
 	var markups []models.MarkupType
 
+	batchID, err := strconv.Atoi(c.DefaultQuery("batch_id", "0"))
+	if err != nil {
+		log.Warn("wrong batch_id parameter", slog.Any("error", err))
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "wrong batch_id parameter",
+		})
+		return
+	}
+
 	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
 	if err != nil {
 		log.Warn("wrong page parameter", slog.Any("error", err))
@@ -51,9 +60,17 @@ func (con *MarkupType) Index(c *gin.Context) {
 	offset := (page - 1) * perPage
 
 	var total int64
-	con.db.Model(&models.MarkupType{}).Count(&total)
+	tx := con.db.Model(&models.MarkupType{})
+	if batchID > 0 {
+		tx = tx.Where("batch_id = ?", batchID)
+	}
+	tx.Count(&total)
 
-	con.db.Limit(perPage).Offset(offset).Find(&markups)
+	tx = con.db.Limit(perPage).Offset(offset)
+	if batchID > 0 {
+		tx = tx.Where("batch_id = ?", batchID)
+	}
+	tx.Find(&markups)
 
 	c.JSON(http.StatusOK, responses.Pagination(markups, total, page, perPage))
 }
@@ -89,7 +106,7 @@ func (con *MarkupType) Find(c *gin.Context) {
 
 type storeMarkupType struct {
 	Name   string                 `binding:"required" json:"name"`
-	Fields []storeMarkupTypeField `binding:"required" json:"fields"`
+	Fields []storeMarkupTypeField `binding:"required,dive" json:"fields"`
 }
 
 type storeMarkupTypeField struct {
@@ -161,8 +178,7 @@ func (con *MarkupType) Store(c *gin.Context) {
 type updateMarkupType struct {
 	Name   string `binding:"required" json:"name"`
 	Fields []struct {
-		ID           *uint `json:"id"`
-		MarkupTypeID uint  `binding:"required" json:"markup_type_id"`
+		ID *uint `json:"id"`
 		storeMarkupTypeField
 	} `binding:"required" json:"fields"`
 }
@@ -231,7 +247,7 @@ func (con *MarkupType) Update(c *gin.Context) {
 			Label:            field.Label,
 			GroupID:          field.GroupID,
 			AssessmentTypeID: field.AssessmentTypeID,
-			MarkupTypeID:     field.MarkupTypeID,
+			MarkupTypeID:     markupType.ID,
 		}
 
 		if field.ID != nil {
