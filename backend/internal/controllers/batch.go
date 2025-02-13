@@ -355,7 +355,7 @@ func (con *Batch) TieMarkupType(c *gin.Context) {
 	if data.MarkupTypeID != nil {
 		err := con.db.
 			Preload("Fields.AssessmentType").
-			Where("id = ?", id).
+			Where("id = ?", data.MarkupTypeID).
 			First(&markupType).Error
 
 		if err != nil {
