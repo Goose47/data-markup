@@ -93,9 +93,10 @@ type storeMarkupType struct {
 }
 
 type storeMarkupTypeField struct {
-	Name             string `binding:"required" json:"name"`
-	GroupID          uint   `binding:"required" json:"group_id"`
-	AssessmentTypeID uint   `binding:"required" json:"assessment_type_id"`
+	Name             *string `binding:"required" json:"name"`
+	Label            string  `binding:"required" json:"label"`
+	GroupID          uint    `binding:"required" json:"group_id"`
+	AssessmentTypeID uint    `binding:"required" json:"assessment_type_id"`
 }
 
 func (con *MarkupType) Store(c *gin.Context) {
@@ -132,6 +133,7 @@ func (con *MarkupType) Store(c *gin.Context) {
 	for i, field := range data.Fields {
 		fields[i] = models.MarkupTypeField{
 			Name:             field.Name,
+			Label:            field.Label,
 			GroupID:          field.GroupID,
 			AssessmentTypeID: field.AssessmentTypeID,
 			MarkupTypeID:     markupType.ID,
@@ -226,6 +228,7 @@ func (con *MarkupType) Update(c *gin.Context) {
 	for i, field := range data.Fields {
 		nextField := models.MarkupTypeField{
 			Name:             field.Name,
+			Label:            field.Label,
 			GroupID:          field.GroupID,
 			AssessmentTypeID: field.AssessmentTypeID,
 			MarkupTypeID:     field.MarkupTypeID,

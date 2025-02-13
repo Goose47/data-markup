@@ -61,7 +61,7 @@ func (con *Batch) Index(c *gin.Context) {
 	//	userID = 1
 	//}
 	isAdmin := true // todo retrieve from authenticated user
-	userID := 3
+	userID := 2
 
 	var total int64
 	tx := con.db.Model(&models.Batch{})
