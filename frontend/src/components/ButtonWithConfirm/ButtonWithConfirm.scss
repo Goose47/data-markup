@@ -1,0 +1,21 @@
+@use '../../variables.scss';
+$block: '.#{variables.$ns}button-with-confirm';
+
+#{$block} {
+    &__popup-button {
+        margin-top: 15px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    &__popup {
+        padding: 15px 30px;
+        h1 {
+            margin-bottom: 10px;
+        }
+        p {
+            margin-top: 0;
+        }
+    }
+}

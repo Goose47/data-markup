@@ -1,5 +1,5 @@
 @use '../../variables.scss';
-$block: '.#{variables.$ns}markup-create-form';
+$block: '.#{variables.$ns}markup-form';
 
 #{$block} {
     max-width: 600px;
@@ -61,8 +61,16 @@ $block: '.#{variables.$ns}markup-create-form';
         }
     }
 
+    &__question {
+        margin-bottom: 15px;
+    }
+
     &__add-option {
         margin-top: 15px;
+
+        label {
+            font-size: 14px;
+        }
 
         svg {
             margin-top: 15px;
@@ -96,6 +104,13 @@ $block: '.#{variables.$ns}markup-create-form';
         p {
             margin-top: 0;
         }
+    }
+
+    position: relative;
+    &__delete {
+        cursor: pointer;
+        position: absolute;
+        right: -40px;
     }
 
 }

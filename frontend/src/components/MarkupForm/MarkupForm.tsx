@@ -1,37 +1,55 @@
 import { Button, Modal, Select, TextInput } from "@gravity-ui/uikit";
 import { block } from "../../utils/block";
-import "./MarkupCreateForm.scss";
-import { Minus, Plus } from "@gravity-ui/icons";
-import { useState } from "react";
-import { CircleInfoFill } from "@gravity-ui/icons";
-import { handleCreateMarkupType } from "../../utils/requests";
-import { CreateMarkupTypeFields } from "../../utils/types";
+import "./MarkupForm.scss";
+import { TrashBin, Plus } from "@gravity-ui/icons";
+import { ReactNode, useState } from "react";
+import { MarkupTypeField } from "../../utils/types";
 
 const _ = require("lodash");
 
-const b = block("markup-create-form");
+const b = block("markup-form");
 
-export type MarkupTypeCreate = {
+export type MarkupTypeForm = {
   type?: string;
+  label: string;
   options: string[];
 };
 
-export const MarkupCreateForm = () => {
-  const [name, setName] = useState<string>();
-  const [markups, setMarkups] = useState<MarkupTypeCreate[]>([]);
-
+export const MarkupForm = ({
+  submit,
+  markups,
+  setMarkups,
+  name,
+  setName,
+  title,
+  description,
+}: {
+  submit: (result: MarkupTypeField[]) => void;
+  markups: MarkupTypeForm[];
+  setMarkups: (markups: MarkupTypeForm[]) => void;
+  name: string;
+  setName: (name: string) => void;
+  title: ReactNode;
+  description: ReactNode;
+}) => {
   const handleAddNewMarkup = () => {
-    const markupsCopy = markups.slice();
+    const markupsCopy = _.cloneDeep(markups);
     markupsCopy.push({
       type: undefined,
+      label: "",
       options: [""],
     });
+    setMarkups(markupsCopy);
+  };
+  const handleDeleteMarkup = (markupIndex: number) => {
+    const markupsCopy = _.cloneDeep(markups);
+    markupsCopy.splice(markupIndex, 1);
     setMarkups(markupsCopy);
   };
 
   const handleUpdateMarkup = (
     markupIndex: number,
-    newMarkupType: MarkupTypeCreate
+    newMarkupType: MarkupTypeForm
   ) => {
     const markupsCopy = _.cloneDeep(markups);
     markupsCopy[markupIndex] = newMarkupType;
@@ -50,11 +68,12 @@ export const MarkupCreateForm = () => {
       return;
     }
 
-    const result: CreateMarkupTypeFields[] = [];
+    const result: MarkupTypeField[] = [];
     markups.forEach((markup, index) => {
       if (markup.type === "5") {
         result.push({
           name: "",
+          label: markup.label,
           group_id: index + 1,
           assessment_type_id: parseInt(markup.type ?? "1"),
         });
@@ -63,28 +82,20 @@ export const MarkupCreateForm = () => {
       markup.options.forEach((option) => {
         result.push({
           name: option,
+          label: markup.label,
           group_id: index + 1,
           assessment_type_id: parseInt(markup.type ?? "1"),
         });
       });
     });
-    handleCreateMarkupType({
-      name: name,
-      fields: result,
-    });
+    console.log(result);
+    submit(result);
   };
 
   return (
     <div className={b()}>
-      <h1>Добавить тип разметки</h1>
-      <p>
-        Заполните соответствующую форму и вы сможете добавить этот тип разметки
-        к новым проектам. <br />
-        <br />
-        <CircleInfoFill></CircleInfoFill> Тип разметки - это то, что будет
-        видеть ассессор в качестве вариантов ответа на определенный запрос в
-        проекте (batch-е). Вы в последствие сможете редактировать данный шаблон.
-      </p>
+      <h1>{title}</h1>
+      <p>{description}</p>
       <div className={b("input-group")}>
         <label htmlFor="name">Название разметки</label>
         <TextInput
@@ -99,6 +110,14 @@ export const MarkupCreateForm = () => {
       <div className={b("input-group")}>
         {markups.map((markup, markupIndex) => (
           <div key={markupIndex} className={b("input-type")}>
+            <div
+              className={b("delete")}
+              onClick={() => {
+                handleDeleteMarkup(markupIndex);
+              }}
+            >
+              <TrashBin width={20} height={20} />
+            </div>
             <label htmlFor={`type-${markupIndex}`}>Выберите тип</label>
             <Select
               placeholder="Тип"
@@ -106,6 +125,7 @@ export const MarkupCreateForm = () => {
               width={"max"}
               size="l"
               id={`type-${markupIndex}`}
+              value={[markup.type ?? ""]}
               onUpdate={(values) => {
                 handleUpdateMarkup(markupIndex, {
                   ...markups[markupIndex],
@@ -119,10 +139,26 @@ export const MarkupCreateForm = () => {
               <Select.Option value="4">Multiselect</Select.Option>
               <Select.Option value="5">Text</Select.Option>
             </Select>
+            <div className={b("add-option")}>
+              <div className={b("question")}>
+                <label htmlFor={`markup-question-${markupIndex}`}>Вопрос</label>
+                <TextInput
+                  placeholder={`Вопрос (можно оставить пустым)`}
+                  id={`markup-question-${markupIndex}`}
+                  value={markup.label}
+                  onUpdate={(value) => {
+                    handleUpdateMarkup(markupIndex, {
+                      ...markups[markupIndex],
+                      label: value,
+                    });
+                  }}
+                />
+              </div>
+            </div>
 
             {markup.type && markup.type !== "5" && (
               <div className={b("add-option")}>
-                <div className={b("add-option-title")}>Варианты ответа:</div>
+                <label>Варианты ответа:</label>
                 {markup.options.map((option, index) => (
                   <div key={index} className={b("add-option-option")}>
                     <TextInput
@@ -138,7 +174,7 @@ export const MarkupCreateForm = () => {
                         });
                       }}
                     />
-                    <Minus
+                    <TrashBin
                       onClick={() => {
                         const optionsCopy = markups[markupIndex].options;
                         optionsCopy.splice(index, 1);
@@ -153,8 +189,8 @@ export const MarkupCreateForm = () => {
                   </div>
                 ))}
                 <Plus
-                  width={20}
-                  height={20}
+                  width={15}
+                  height={15}
                   onClick={() => {
                     const optionsCopy = markups[markupIndex].options;
                     optionsCopy.push("");
