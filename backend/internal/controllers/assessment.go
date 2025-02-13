@@ -236,7 +236,7 @@ func (con *Assessment) Update(c *gin.Context) {
 			responses.InternalServerError(c)
 			return
 		}
-		assessment.Fields[i] = nextField
+		processedIds[i] = nextField.ID
 	}
 
 	result := tx.Where("assessment_id = ? AND id NOT IN ?", assessment.ID, processedIds).Delete(&models.AssessmentField{})
