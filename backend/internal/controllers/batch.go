@@ -94,9 +94,7 @@ func (con *Batch) Find(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Warn("batch not found")
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "batch not found",
-			})
+			responses.NotFoundError(c)
 			return
 		}
 

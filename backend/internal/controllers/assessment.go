@@ -2,9 +2,11 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"log/slog"
+	"markup/internal/domain/enums/markupStatus"
 	"markup/internal/domain/models"
 	"markup/internal/lib/responses"
 	"markup/internal/lib/validation/query"
@@ -113,6 +115,8 @@ type storeAssessmentField struct {
 	MarkupTypeFieldID uint    `binding:"required" json:"markup_type_field_id"`
 }
 
+// todo: ensure there is only one models.Assessment for models.Markup for every models.Assessment.UserID
+// todo: forbid to create models.Assessment when models.Markup is already processed if models.User is not admin
 func (con *Assessment) Store(c *gin.Context) {
 	const op = "AssessmentController.Store"
 	log := con.log.With(slog.String("op", op))
@@ -142,8 +146,30 @@ func (con *Assessment) Store(c *gin.Context) {
 		}
 	}
 
-	if err := con.db.Create(&assessment).Error; err != nil {
+	assessment.Hash = assessment.CalculateHash()
+
+	tx := con.db.Begin()
+	if err := tx.Error; err != nil {
+		log.Error("failed to begin transaction", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+
+	// Save assessment.
+	if err := tx.Create(&assessment).Error; err != nil {
+		tx.Rollback()
 		log.Error("failed to create assessment", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+
+	if err := updateCorrectAssessment(log, tx, assessment, isAdmin); err != nil {
+		tx.Rollback()
+		responses.InternalServerError(c)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Error("failed to commit transaction", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -151,6 +177,50 @@ func (con *Assessment) Store(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"id": assessment.ID,
 	})
+}
+
+// updateCorrectAssessment checks whether there is enough identical assessments or an models.Assessment is made by admin
+// to mark models.Markup as markupStatus.Processed and set models.Markup.CorrectAssessmentHash.
+func updateCorrectAssessment(
+	log *slog.Logger,
+	tx *gorm.DB,
+	assessment models.Assessment,
+	isAdmin bool,
+) error {
+	const op = "Assessment.UpdateCorrectAssessment"
+	log = log.With(slog.String("op", op))
+
+	isCorrectAssessment := false
+	if isAdmin {
+		isCorrectAssessment = true
+	} else {
+		// Check if enough assessments are made.
+		tx.Preload("Markup.Batch").First(&assessment)
+		var count int64
+		tx.Model(&Assessment{}).
+			Where("hash = ? AND markup_id = ?", assessment.Hash, assessment.MarkupID).
+			Count(&count)
+
+		if count >= int64(assessment.Markup.Batch.Overlaps) {
+			isCorrectAssessment = true
+		}
+	}
+
+	if isCorrectAssessment {
+		// Mark Markup as processed.
+		tx.Model(&Markup{}).
+			Where("id = ?", assessment.MarkupID).
+			Updates(map[string]interface{}{
+				"status_id":               markupStatus.Processed,
+				"correct_assessment_hash": assessment.Hash,
+			})
+		if err := tx.Error; err != nil {
+			log.Error("failed to update markup", slog.Any("error", err))
+			return fmt.Errorf("%s: %w", op, err)
+		}
+	}
+
+	return nil
 }
 
 type updateAssessment struct {
@@ -195,6 +265,7 @@ func (con *Assessment) Update(c *gin.Context) {
 	}
 
 	var userID uint = 3 // todo: retrieve from authenticated user
+	var isAdmin = false // todo retrieve from authenticated user
 	if userID != assessment.UserID {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "cannot update assessment of another user",
@@ -245,6 +316,11 @@ func (con *Assessment) Update(c *gin.Context) {
 		log.Error("failed to delete assessment fields", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
+	}
+
+	if err := updateCorrectAssessment(log, tx, assessment, isAdmin); err != nil {
+		tx.Rollback()
+		responses.InternalServerError(c)
 	}
 
 	if err := tx.Commit().Error; err != nil {

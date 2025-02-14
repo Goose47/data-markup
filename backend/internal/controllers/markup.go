@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"log/slog"
+	"markup/internal/domain/enums/markupStatus"
 	"markup/internal/domain/models"
 	"markup/internal/lib/responses"
 	"net/http"
@@ -72,6 +73,11 @@ func (con *Markup) Index(c *gin.Context) {
 	c.JSON(http.StatusOK, responses.Pagination(markups, total, page, perPage))
 }
 
+type markupFindResponse struct {
+	models.Markup
+	CorrectAssessment *models.Assessment `json:"correct_assessment"`
+}
+
 func (con *Markup) Find(c *gin.Context) {
 	const op = "MarkupController.Find"
 	id := c.Param("id")
@@ -87,9 +93,7 @@ func (con *Markup) Find(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Warn("markup not found")
-			c.JSON(http.StatusNotFound, gin.H{
-				"error": "markup not found",
-			})
+			responses.NotFoundError(c)
 			return
 		}
 
@@ -98,5 +102,25 @@ func (con *Markup) Find(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, markup)
+	var correctAssessment *models.Assessment
+	if markup.StatusID == markupStatus.Processed {
+		err := con.db.
+			Where("hash = ?", markup.CorrectAssessmentHash).
+			First(&correctAssessment).Error
+
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				log.Error("correct assessment not found", slog.String("hash", *markup.CorrectAssessmentHash))
+			} else {
+				log.Error("failed to find markup", slog.Any("error", err))
+			}
+			responses.InternalServerError(c)
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, markupFindResponse{
+		markup,
+		correctAssessment,
+	})
 }
