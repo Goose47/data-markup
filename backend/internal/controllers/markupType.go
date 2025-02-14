@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"markup/internal/domain/models"
 	"markup/internal/lib/responses"
+	"markup/internal/lib/validation/query"
 	"net/http"
-	"strconv"
 )
 
 type MarkupType struct {
@@ -30,45 +30,39 @@ func (con *MarkupType) Index(c *gin.Context) {
 	const op = "MarkupTypeController.Index"
 	log := con.log.With(slog.String("op", op))
 
-	var markups []models.MarkupType
+	var batchID *int
+	var page int
+	var perPage int
+	var err error
 
-	batchID, err := strconv.Atoi(c.DefaultQuery("batch_id", "0"))
-	if err != nil {
-		log.Warn("wrong batch_id parameter", slog.Any("error", err))
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "wrong batch_id parameter",
-		})
+	batchID = query.Int(c, log, "batch_id")
+	if page, err = query.DefaultInt(c, log, "page", "1"); err != nil {
 		return
 	}
-
-	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
-	if err != nil {
-		log.Warn("wrong page parameter", slog.Any("error", err))
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "wrong page parameter",
-		})
-		return
-	}
-	perPage, err := strconv.Atoi(c.DefaultQuery("per_page", "10"))
-	if err != nil {
-		log.Warn("wrong per_page parameter", slog.Any("error", err))
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "wrong per_page parameter",
-		})
+	if perPage, err = query.DefaultInt(c, log, "per_page", "10"); err != nil {
 		return
 	}
 	offset := (page - 1) * perPage
 
 	var total int64
 	tx := con.db.Model(&models.MarkupType{})
-	if batchID > 0 {
-		tx = tx.Where("batch_id = ?", batchID)
+	if batchID != nil {
+		if *batchID > 0 {
+			tx = tx.Where("batch_id = ?", batchID)
+		} else {
+			tx = tx.Where("batch_id IS NULL")
+		}
 	}
 	tx.Count(&total)
 
+	var markups []models.MarkupType
 	tx = con.db.Limit(perPage).Offset(offset)
-	if batchID > 0 {
-		tx = tx.Where("batch_id = ?", batchID)
+	if batchID != nil {
+		if *batchID > 0 {
+			tx = tx.Where("batch_id = ?", batchID)
+		} else {
+			tx = tx.Where("batch_id IS NULL")
+		}
 	}
 	tx.Find(&markups)
 

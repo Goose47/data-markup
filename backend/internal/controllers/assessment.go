@@ -38,16 +38,16 @@ func (con *Assessment) Index(c *gin.Context) {
 	var err error
 
 	// todo: refactor query param fetching. Use query functions
-	if userID, err = query.Int(c, log, "user_id", "0"); err != nil {
+	if userID, err = query.DefaultInt(c, log, "user_id", "0"); err != nil {
 		return
 	}
-	if markupID, err = query.Int(c, log, "markup_id", "0"); err != nil {
+	if markupID, err = query.DefaultInt(c, log, "markup_id", "0"); err != nil {
 		return
 	}
-	if page, err = query.Int(c, log, "page", "1"); err != nil {
+	if page, err = query.DefaultInt(c, log, "page", "1"); err != nil {
 		return
 	}
-	if perPage, err = query.Int(c, log, "per_page", "10"); err != nil {
+	if perPage, err = query.DefaultInt(c, log, "per_page", "10"); err != nil {
 		return
 	}
 	offset := (page - 1) * perPage

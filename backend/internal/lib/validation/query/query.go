@@ -9,9 +9,9 @@ import (
 	"strconv"
 )
 
-// Int retrieves key from query param, converts it to int and sends response if fails.
-func Int(c *gin.Context, log *slog.Logger, key string, defaultValue string) (int, error) {
-	const op = "validation.query.Int"
+// DefaultInt retrieves key from query param, converts it to int and sends response if fails.
+func DefaultInt(c *gin.Context, log *slog.Logger, key string, defaultValue string) (int, error) {
+	const op = "validation.query.DefaultInt"
 
 	value, err := strconv.Atoi(c.DefaultQuery(key, defaultValue))
 	if err != nil {
@@ -24,4 +24,14 @@ func Int(c *gin.Context, log *slog.Logger, key string, defaultValue string) (int
 	}
 
 	return value, nil
+}
+
+// Int retrieves key from query param, converts it to int and returns nil if fails.
+func Int(c *gin.Context, key string) *int {
+	value, err := strconv.Atoi(c.Query(key))
+	if err != nil {
+		return nil
+	}
+
+	return &value
 }
