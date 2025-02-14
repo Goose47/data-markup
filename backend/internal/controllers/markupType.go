@@ -35,7 +35,7 @@ func (con *MarkupType) Index(c *gin.Context) {
 	var perPage int
 	var err error
 
-	batchID = query.Int(c, log, "batch_id")
+	batchID = query.Int(c, "batch_id")
 	if page, err = query.DefaultInt(c, log, "page", "1"); err != nil {
 		return
 	}
