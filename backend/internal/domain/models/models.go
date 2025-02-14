@@ -48,6 +48,7 @@ type Batch struct {
 type Markup struct {
 	ID          uint         `json:"id" gorm:"primaryKey"`
 	BatchID     uint         `json:"batch_id"`
+	StatusID    uint         `json:"status_id"`
 	Data        string       `json:"data" gorm:"type:text"`
 	Batch       Batch        `json:"-" gorm:"foreignKey:BatchID;references:ID"`
 	Assessments []Assessment `json:"assessments" gorm:"foreignKey:MarkupID;references:ID"`

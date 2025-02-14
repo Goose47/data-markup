@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 	"io"
 	"log/slog"
+	"markup/internal/domain/enums/markupStatus"
 	"markup/internal/domain/models"
 	"markup/internal/lib/responses"
 	"net/http"
@@ -226,8 +227,9 @@ func (con *Batch) Store(c *gin.Context) {
 		}
 
 		markup := models.Markup{
-			BatchID: batch.ID,
-			Data:    string(markupDataMarshalled),
+			BatchID:  batch.ID,
+			StatusID: markupStatus.Pending,
+			Data:     string(markupDataMarshalled),
 		}
 
 		markups = append(markups, markup)
