@@ -212,13 +212,16 @@ func (con *Assessment) Next(c *gin.Context) {
 	// todo do smth w priorities
 
 	var res struct {
-		MarkupID         uint
+		MarkupID         uint `gorm:"column:id"`
 		AssessmentsCount int64
 	}
 	err = con.db.
-		Select("markups.id, COUNT(assessments.id) as assessments_count").
-		Joins("batches ON markups.batch_id = batches.id").
-		Joins("assessments ON assessments.markup_id = markups.id").
+		Table("markups").
+		Select("markups.id, COUNT(assessments.id) as assessments_count, batches.overlaps, markups.status_id").
+		Where("status_id = ?", markupStatus.Pending).
+		Joins("JOIN batches ON markups.batch_id = batches.id").
+		Joins("LEFT JOIN assessments ON assessments.markup_id = markups.id").
+		Group("markups.id").
 		Having("assessments_count < batches.overlaps").
 		First(&res).Error
 
@@ -244,7 +247,6 @@ func (con *Assessment) Next(c *gin.Context) {
 
 	// Save assessment.
 	if err := con.db.Create(&assessment).Error; err != nil {
-		con.db.Rollback()
 		log.Error("failed to create assessment", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
@@ -349,6 +351,13 @@ func (con *Assessment) Update(c *gin.Context) {
 		return
 	}
 
+	if assessment.UpdatedAt.Add(30 * time.Minute).Before(time.Now()) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "cannot update assessment if > 30 minutes have passed",
+		})
+		return
+	}
+
 	tx := con.db.Begin()
 	if err := tx.Error; err != nil {
 		log.Error("failed to begin transaction", slog.Any("error", err))
@@ -390,6 +399,17 @@ func (con *Assessment) Update(c *gin.Context) {
 	if err := result.Error; err != nil {
 		tx.Rollback()
 		log.Error("failed to delete assessment fields", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+
+	// load current fields
+	tx.Preload("Fields").First(&assessment)
+	hash := assessment.CalculateHash()
+	assessment.Hash = &hash
+	if err := tx.Save(&assessment).Error; err != nil {
+		tx.Rollback()
+		log.Error("failed to update assessment", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
