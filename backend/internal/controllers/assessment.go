@@ -284,6 +284,7 @@ func formatNextResponse(assessment models.Assessment) *gin.H {
 	return &gin.H{
 		"assessment_id": assessment.ID,
 		"markup_type":   markupType,
+		"data":          assessment.Markup.Data,
 	}
 }
 
