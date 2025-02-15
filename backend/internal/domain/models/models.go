@@ -30,15 +30,16 @@ type Permission struct {
 }
 
 type Batch struct {
-	ID        uint      `json:"id" gorm:"primaryKey"`
-	Name      string    `json:"name" gorm:"not null"`
-	Overlaps  int       `json:"overlaps"`
-	Priority  int       `json:"priority"`
-	CreatedAt time.Time `json:"created_at"`
-	IsActive  bool      `json:"is_active"`
-	TypeID    uint      `json:"type_id"`
-	Markups   []Markup  `json:"-" gorm:"foreignKey:BatchID;references:ID"`
-	Users     []User    `json:"-" gorm:"many2many:user_batches;"`
+	ID          uint         `json:"id" gorm:"primaryKey"`
+	Name        string       `json:"name" gorm:"not null"`
+	Overlaps    int          `json:"overlaps"`
+	Priority    int          `json:"priority"`
+	CreatedAt   time.Time    `json:"created_at"`
+	IsActive    bool         `json:"is_active"`
+	TypeID      uint         `json:"type_id"`
+	Markups     []Markup     `json:"-" gorm:"foreignKey:BatchID;references:ID"`
+	MarkupTypes []MarkupType `json:"-" gorm:"foreignKey:BatchID;references:ID"`
+	Users       []User       `json:"-" gorm:"many2many:user_batches;"`
 }
 
 //type UserBatch struct {
