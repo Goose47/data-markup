@@ -90,6 +90,7 @@ export const MyMarkupType = ({
               <div className={b("delete")}>
                 <ButtonWithConfirm
                   handleSubmit={() => {
+                    console.log("GAGAG");
                     deleteMarkupType(markupType.id).then(async () => {
                       triggerRerender();
                     });

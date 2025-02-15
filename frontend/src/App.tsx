@@ -7,6 +7,7 @@ import { Sidebar } from "./components/Sidebar/Sidebar";
 import { MyMarkupTypes } from "./pages/MyMarkupTypes/MyMarkupTypes";
 import { MarkupCreate } from "./pages/MarkupCreate/MarkupCreate";
 import { MarkupEdit } from "./pages/MarkupEdit/MarkupEdit";
+import { BatchCreate } from "./pages/BatchCreate/BatchCreate";
 
 const b = block("app");
 
@@ -21,6 +22,7 @@ export const App = () => {
               <Route path="/" element={<Home />}></Route>
               <Route path="/markup/create" element={<MarkupCreate />}></Route>
               <Route path="/markup" element={<MyMarkupTypes />}></Route>
+              <Route path="/batch/create" element={<BatchCreate />}></Route>
               <Route path="/markup/:id" element={<MarkupEdit />}></Route>
             </Routes>
           </div>

@@ -67,6 +67,7 @@ export const MarkupEdit = () => {
         setMarkups={setMarkups}
         name={name}
         setName={setName}
+        buttonText={"Редактировать"}
       />
     </div>
   );

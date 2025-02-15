@@ -4,7 +4,6 @@ import { MarkupTypeRq } from "./types";
 const API_PREFIX = "https://api.rwfshr.ru";
 
 export const handleCreateMarkupType = async (request: MarkupTypeRq) => {
-  // todo: catch
   return await axios
     .post(API_PREFIX + "/api/v1/markupTypes", request)
     .then((response) => {
@@ -16,7 +15,6 @@ export const handleEditMarkupType = async (
   markupId: string,
   request: MarkupTypeRq
 ) => {
-  // todo: catch
   return await axios
     .put(API_PREFIX + "/api/v1/markupTypes/" + markupId, request)
     .then((response) => {
@@ -26,7 +24,7 @@ export const handleEditMarkupType = async (
 
 export const getAvailableMarkupTypes = async () => {
   return await axios
-    .get(API_PREFIX + "/api/v1/markupTypes")
+    .get(API_PREFIX + "/api/v1/markupTypes?batch_id=0")
     .then((response) => response.data.data);
 };
 
@@ -38,6 +36,6 @@ export const getDetailedMarkupType = async (markupId: number) => {
 
 export const deleteMarkupType = async (markupId: number) => {
   return await axios
-    .get(API_PREFIX + "/api/v1/markupTypes/" + markupId)
+    .delete(API_PREFIX + "/api/v1/markupTypes/" + markupId)
     .then((response) => response.data);
 };

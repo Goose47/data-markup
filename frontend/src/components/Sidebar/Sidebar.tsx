@@ -3,6 +3,8 @@ import { block } from "../../utils/block";
 
 import "./Sidebar.scss";
 import { Link, useLocation } from "react-router";
+import axios from "axios";
+import { toaster } from "@gravity-ui/uikit/toaster-singleton";
 
 const b = block("sidebar");
 
@@ -12,6 +14,21 @@ export const Sidebar = () => {
   const getLinkClass = (path: string) => {
     return location.pathname === path ? "_active" : "";
   };
+
+  axios.interceptors.response.use(
+    (response) => {
+      return response;
+    },
+    (error) => {
+      toaster.add({
+        title: "Произошла ошибка",
+        name: error.response.data.error,
+        content: error.response.data.error,
+        theme: "danger",
+      });
+      return error.response;
+    }
+  );
 
   return (
     <div className={b()}>

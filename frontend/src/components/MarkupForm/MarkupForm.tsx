@@ -23,6 +23,7 @@ export const MarkupForm = ({
   setName,
   title,
   description,
+  buttonText,
 }: {
   submit: (result: MarkupTypeField[]) => void;
   markups: MarkupTypeForm[];
@@ -31,6 +32,7 @@ export const MarkupForm = ({
   setName: (name: string) => void;
   title: ReactNode;
   description: ReactNode;
+  buttonText: ReactNode;
 }) => {
   const handleAddNewMarkup = () => {
     const markupsCopy = _.cloneDeep(markups);
@@ -59,15 +61,6 @@ export const MarkupForm = ({
   const [open, setOpen] = useState(false);
 
   const handleSubmit = () => {
-    if (markups.filter((markup) => markup.type).length !== markups.length) {
-      alert("Не указан тип данных в типе разметки");
-      return;
-    }
-    if (!name) {
-      alert("Имя не должно быть пустым");
-      return;
-    }
-
     const result: MarkupTypeField[] = [];
     markups.forEach((markup, index) => {
       if (markup.type === "5") {
@@ -211,7 +204,7 @@ export const MarkupForm = ({
       </div>
       <div className={b("input-group")}>
         <Button view="action" onClick={() => setOpen(true)}>
-          Добавить
+          {buttonText}
         </Button>
         <Modal
           open={open}
@@ -234,6 +227,7 @@ export const MarkupForm = ({
           </div>
         </Modal>
       </div>
+      <div className={b("input-group")}></div>
     </div>
   );
 };
