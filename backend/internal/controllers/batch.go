@@ -226,9 +226,10 @@ func (con *Batch) Store(c *gin.Context) {
 		}
 
 		markup := models.Markup{
-			BatchID:  batch.ID,
-			StatusID: markupStatus.Pending,
-			Data:     string(markupDataMarshalled),
+			BatchID:               batch.ID,
+			StatusID:              markupStatus.Pending,
+			Data:                  string(markupDataMarshalled),
+			CorrectAssessmentHash: nil,
 		}
 
 		markups = append(markups, markup)
