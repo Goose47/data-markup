@@ -16,6 +16,7 @@ func NewRouter(
 	markupTypeCon *controllers.MarkupType,
 	batchCon *controllers.Batch,
 	markupCon *controllers.Markup,
+	assessmentCon *controllers.Assessment,
 ) *gin.Engine {
 	var mode string
 	switch env {
@@ -54,11 +55,24 @@ func NewRouter(
 				batches.POST("", batchCon.Store)
 				batches.PUT("/:id", batchCon.Update)
 				batches.DELETE("/:id", batchCon.Destroy)
+
+				batches.POST("/:id/markupTypes", batchCon.TieMarkupType)
+				batches.PUT("/:id/toggleActive", batchCon.ToggleIsActive)
 			}
 			markups := v1.Group("/markups")
 			{
 				markups.GET("", markupCon.Index)
 				markups.GET("/:id", markupCon.Find)
+			}
+			assessments := v1.Group("/assessments")
+			{
+				assessments.GET("", assessmentCon.Index)
+				assessments.GET("/:id", assessmentCon.Find)
+				assessments.POST("", assessmentCon.Store)
+				assessments.PUT("/:id", assessmentCon.Update)
+				assessments.DELETE("/:id", assessmentCon.Destroy)
+
+				assessments.POST("/next", assessmentCon.Next)
 			}
 		}
 	}

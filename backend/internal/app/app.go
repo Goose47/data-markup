@@ -5,10 +5,11 @@ import (
 	"context"
 	"log/slog"
 	serverapp "markup/internal/app/server"
+	"markup/internal/background"
 	"markup/internal/config"
 	"markup/internal/controllers"
-	"markup/internal/db/postgres"
 	//"markup/internal/db/mysql"
+	"markup/internal/db/postgres"
 	"markup/internal/repos"
 	"markup/internal/server"
 	"markup/internal/services"
@@ -20,8 +21,9 @@ type clearer interface {
 
 // App represents application.
 type App struct {
-	Server *serverapp.Server
-	Cache  clearer
+	Server      *serverapp.Server
+	TaskManager *background.TaskManager
+	Cache       clearer
 }
 
 // New creates all dependencies for App and returns new App instance.
@@ -45,6 +47,7 @@ func New(
 	markupTypeCon := controllers.NewMarkupType(log, db)
 	batchCon := controllers.NewBatch(log, db)
 	markupCon := controllers.NewMarkup(log, db)
+	assessmentCon := controllers.NewAssessment(log, db)
 
 	router := server.NewRouter(
 		log,
@@ -53,10 +56,14 @@ func New(
 		markupTypeCon,
 		batchCon,
 		markupCon,
+		assessmentCon,
 	)
 	serverApp := serverapp.New(log, port, router)
 
+	tm := background.NewTaskManager(log, db)
+
 	return &App{
-		Server: serverApp,
+		Server:      serverApp,
+		TaskManager: tm,
 	}
 }

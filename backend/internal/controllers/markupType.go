@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"markup/internal/domain/models"
 	"markup/internal/lib/responses"
+	"markup/internal/lib/validation/query"
 	"net/http"
-	"strconv"
 )
 
 type MarkupType struct {
@@ -30,30 +30,41 @@ func (con *MarkupType) Index(c *gin.Context) {
 	const op = "MarkupTypeController.Index"
 	log := con.log.With(slog.String("op", op))
 
-	var markups []models.MarkupType
+	var batchID *int
+	var page int
+	var perPage int
+	var err error
 
-	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
-	if err != nil {
-		log.Warn("wrong page parameter", slog.Any("error", err))
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "wrong page parameter",
-		})
+	batchID = query.Int(c, "batch_id")
+	if page, err = query.DefaultInt(c, log, "page", "1"); err != nil {
 		return
 	}
-	perPage, err := strconv.Atoi(c.DefaultQuery("per_page", "10"))
-	if err != nil {
-		log.Warn("wrong per_page parameter", slog.Any("error", err))
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "wrong per_page parameter",
-		})
+	if perPage, err = query.DefaultInt(c, log, "per_page", "10"); err != nil {
 		return
 	}
 	offset := (page - 1) * perPage
 
 	var total int64
-	con.db.Model(&models.MarkupType{}).Count(&total)
+	tx := con.db.Model(&models.MarkupType{})
+	if batchID != nil {
+		if *batchID > 0 {
+			tx = tx.Where("batch_id = ?", batchID)
+		} else {
+			tx = tx.Where("batch_id IS NULL")
+		}
+	}
+	tx.Count(&total)
 
-	con.db.Limit(perPage).Offset(offset).Find(&markups)
+	var markups []models.MarkupType
+	tx = con.db.Limit(perPage).Offset(offset)
+	if batchID != nil {
+		if *batchID > 0 {
+			tx = tx.Where("batch_id = ?", batchID)
+		} else {
+			tx = tx.Where("batch_id IS NULL")
+		}
+	}
+	tx.Find(&markups)
 
 	c.JSON(http.StatusOK, responses.Pagination(markups, total, page, perPage))
 }
@@ -89,7 +100,7 @@ func (con *MarkupType) Find(c *gin.Context) {
 
 type storeMarkupType struct {
 	Name   string                 `binding:"required" json:"name"`
-	Fields []storeMarkupTypeField `binding:"required" json:"fields"`
+	Fields []storeMarkupTypeField `binding:"required,dive" json:"fields"`
 }
 
 type storeMarkupTypeField struct {
@@ -111,8 +122,8 @@ func (con *MarkupType) Store(c *gin.Context) {
 	}
 
 	tx := con.db.Begin()
-	if tx.Error != nil {
-		log.Error("failed to begin transaction", slog.Any("error", tx.Error))
+	if err := tx.Error; err != nil {
+		log.Error("failed to begin transaction", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -122,9 +133,10 @@ func (con *MarkupType) Store(c *gin.Context) {
 		UserID: userID,
 	}
 
+	// todo: make only one query to save all models. See Assesment.Store
 	if err := tx.Create(&markupType).Error; err != nil {
 		tx.Rollback()
-		log.Error("failed to create markup type", slog.Any("error", tx.Error))
+		log.Error("failed to create markup type", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -142,13 +154,13 @@ func (con *MarkupType) Store(c *gin.Context) {
 
 	if err := tx.Create(&fields).Error; err != nil {
 		tx.Rollback()
-		log.Error("failed to create markup type fields", slog.Any("error", tx.Error))
+		log.Error("failed to create markup type fields", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		log.Error("failed to commit transaction", slog.Any("error", tx.Error))
+		log.Error("failed to commit transaction", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -161,8 +173,7 @@ func (con *MarkupType) Store(c *gin.Context) {
 type updateMarkupType struct {
 	Name   string `binding:"required" json:"name"`
 	Fields []struct {
-		ID           *uint `json:"id"`
-		MarkupTypeID uint  `binding:"required" json:"markup_type_id"`
+		ID *uint `json:"id"`
 		storeMarkupTypeField
 	} `binding:"required" json:"fields"`
 }
@@ -208,8 +219,8 @@ func (con *MarkupType) Update(c *gin.Context) {
 	}
 
 	tx := con.db.Begin()
-	if tx.Error != nil {
-		log.Error("failed to begin transaction", slog.Any("error", tx.Error))
+	if err := tx.Error; err != nil {
+		log.Error("failed to begin transaction", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -218,7 +229,7 @@ func (con *MarkupType) Update(c *gin.Context) {
 
 	if err := tx.Save(&markupType).Error; err != nil {
 		tx.Rollback()
-		log.Error("failed to update markup type", slog.Any("error", tx.Error))
+		log.Error("failed to update markup type", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -231,14 +242,14 @@ func (con *MarkupType) Update(c *gin.Context) {
 			Label:            field.Label,
 			GroupID:          field.GroupID,
 			AssessmentTypeID: field.AssessmentTypeID,
-			MarkupTypeID:     field.MarkupTypeID,
+			MarkupTypeID:     markupType.ID,
 		}
 
 		if field.ID != nil {
 			nextField.ID = *field.ID
 			if err := tx.Save(&nextField).Error; err != nil {
 				tx.Rollback()
-				log.Error("failed to update markup type field", slog.Any("error", tx.Error))
+				log.Error("failed to update markup type field", slog.Any("error", err))
 				responses.InternalServerError(c)
 				return
 			}
@@ -248,7 +259,7 @@ func (con *MarkupType) Update(c *gin.Context) {
 
 		if err := tx.Create(&nextField).Error; err != nil {
 			tx.Rollback()
-			log.Error("failed to create markup type field", slog.Any("error", tx.Error))
+			log.Error("failed to create markup type field", slog.Any("error", err))
 			responses.InternalServerError(c)
 			return
 		}
@@ -256,15 +267,15 @@ func (con *MarkupType) Update(c *gin.Context) {
 	}
 
 	result := tx.Where("markup_type_id = ? AND id NOT IN ?", markupType.ID, processedIds).Delete(&models.MarkupTypeField{})
-	if result.Error != nil {
+	if err := result.Error; err != nil {
 		tx.Rollback()
-		log.Error("failed to delete markup type fields", slog.Any("error", tx.Error))
+		log.Error("failed to delete markup type fields", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		log.Error("failed to commit transaction", slog.Any("error", tx.Error))
+		log.Error("failed to commit transaction", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}

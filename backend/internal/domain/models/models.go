@@ -1,6 +1,9 @@
 package models
 
 import (
+	"slices"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -33,6 +36,7 @@ type Batch struct {
 	Priority  int       `json:"priority"`
 	CreatedAt time.Time `json:"created_at"`
 	IsActive  bool      `json:"is_active"`
+	TypeID    uint      `json:"type_id"`
 	Markups   []Markup  `json:"-" gorm:"foreignKey:BatchID;references:ID"`
 	Users     []User    `json:"-" gorm:"many2many:user_batches;"`
 }
@@ -46,11 +50,13 @@ type Batch struct {
 //}
 
 type Markup struct {
-	ID          uint         `json:"id" gorm:"primaryKey"`
-	BatchID     uint         `json:"batch_id"`
-	Data        string       `json:"data" gorm:"type:text"`
-	Batch       Batch        `json:"-" gorm:"foreignKey:BatchID;references:ID"`
-	Assessments []Assessment `json:"assessments" gorm:"foreignKey:MarkupID;references:ID"`
+	ID                    uint         `json:"id" gorm:"primaryKey"`
+	BatchID               uint         `json:"batch_id"`
+	StatusID              uint         `json:"status_id"`
+	Data                  string       `json:"data" gorm:"type:text"`
+	CorrectAssessmentHash *string      `json:"correct_assessment_hash" gorm:"null"`
+	Batch                 Batch        `json:"-" gorm:"foreignKey:BatchID;references:ID"`
+	Assessments           []Assessment `json:"assessments" gorm:"foreignKey:MarkupID;references:ID"`
 }
 
 type MarkupType struct {
@@ -84,17 +90,33 @@ type Assessment struct {
 	UserID    uint              `json:"user_id"`
 	MarkupID  uint              `json:"markup_id"`
 	CreatedAt time.Time         `json:"created_at"`
+	UpdatedAt *time.Time        `json:"updated_at" gorm:"autoUpdateTime"`
 	IsPrior   bool              `json:"is_prior"`
+	Hash      *string           `json:"hash"`
 	Fields    []AssessmentField `json:"fields" gorm:"foreignKey:AssessmentID;references:ID"`
 	User      User              `json:"-" gorm:"foreignKey:UserID;references:ID"`
 	Markup    Markup            `json:"-" gorm:"foreignKey:MarkupID;references:ID"`
 }
 
+func (a Assessment) CalculateHash() string {
+	ids := make([]uint, len(a.Fields))
+	for i, field := range a.Fields {
+		ids[i] = field.MarkupTypeFieldID
+	}
+	slices.Sort(ids)
+
+	idsString := make([]string, len(ids))
+	for i, id := range ids {
+		idsString[i] = strconv.Itoa(int(id))
+	}
+	return strings.Join(idsString, ",")
+}
+
 type AssessmentField struct {
-	ID                uint            `gorm:"primaryKey"`
-	AssessmentID      uint            ``
-	MarkupTypeFieldID uint            ``
-	Text              *string         ``
-	Assessment        Assessment      `gorm:"foreignKey:AssessmentID;references:ID"`
-	MarkupTypeField   MarkupTypeField `gorm:"foreignKey:MarkupTypeFieldID;references:ID"`
+	ID                uint            `json:"id" gorm:"primaryKey"`
+	AssessmentID      uint            `json:"assessment_id"`
+	MarkupTypeFieldID uint            `json:"markup_type_field_id"`
+	Text              *string         `json:"text"`
+	Assessment        Assessment      `json:"-" gorm:"foreignKey:AssessmentID;references:ID"`
+	MarkupTypeField   MarkupTypeField `json:"-" gorm:"foreignKey:MarkupTypeFieldID;references:ID"`
 }
