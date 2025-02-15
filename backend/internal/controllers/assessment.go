@@ -211,6 +211,22 @@ func (con *Assessment) Next(c *gin.Context) {
 	}
 	// todo do smth w priorities
 
+	var pendingAssessment models.Assessment
+	err = con.db.Model(models.Assessment{}).
+		Preload("Markup.Batch.MarkupTypes.Fields.AssessmentType").
+		Where("hash IS NULL and user_id = ?", userID).
+		First(&pendingAssessment).Error
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Error("failed to search for pending assessment", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+	if err == nil {
+		c.JSON(http.StatusOK, formatNextResponse(pendingAssessment))
+		return
+	}
+
 	var res struct {
 		MarkupID         uint `gorm:"column:id"`
 		AssessmentsCount int64
@@ -252,9 +268,23 @@ func (con *Assessment) Next(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"id": assessment.ID,
-	})
+	con.db.Preload("Markup.Batch.MarkupTypes.Fields.AssessmentType").First(&assessment)
+
+	c.JSON(http.StatusCreated, formatNextResponse(assessment))
+}
+
+func formatNextResponse(assessment models.Assessment) *gin.H {
+	var markupType models.MarkupType
+	for _, mt := range assessment.Markup.Batch.MarkupTypes {
+		if mt.ChildID == nil {
+			markupType = mt
+		}
+	}
+
+	return &gin.H{
+		"assessment_id": assessment.ID,
+		"markup_type":   markupType,
+	}
 }
 
 // updateCorrectAssessment checks whether there is enough identical assessments or an models.Assessment is made by admin
