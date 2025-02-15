@@ -75,7 +75,7 @@ type MarkupTypeField struct {
 	MarkupTypeID     uint           `json:"markup_type_id"`
 	AssessmentTypeID uint           `json:"assessment_type_id"`
 	Name             *string        `gorm:"null" json:"name"`
-	Label            string         `gorm:"not null" json:"label"`
+	Label            *string        `gorm:"null" json:"label"`
 	GroupID          uint           `json:"group_id"`
 	MarkupType       MarkupType     `gorm:"foreignKey:MarkupTypeID;references:ID" json:"-"`
 	AssessmentType   AssessmentType `gorm:"foreignKey:AssessmentTypeID;references:ID" json:"assessment_type"`

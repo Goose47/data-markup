@@ -105,7 +105,7 @@ type storeMarkupType struct {
 
 type storeMarkupTypeField struct {
 	Name             *string `binding:"required" json:"name"`
-	Label            string  `binding:"required" json:"label"`
+	Label            *string `binding:"required" json:"label"`
 	GroupID          uint    `binding:"required" json:"group_id"`
 	AssessmentTypeID uint    `binding:"required" json:"assessment_type_id"`
 }
