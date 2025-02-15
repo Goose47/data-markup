@@ -85,6 +85,7 @@ export const BatchForm = ({
           onUpdate={(value) => setBatchType(value[0])}
           value={[batchType]}
           width={"max"}
+          placeholder="Выберите тип"
         >
           <Select.Option value="1">Простой набор полей</Select.Option>
           <Select.Option value="2">Сравнение двух сущностей</Select.Option>

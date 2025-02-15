@@ -29,6 +29,16 @@ export type BatchRq = {
   type_id: number;
 };
 
+export type BatchCardType = {
+  id: number;
+  name: string;
+  overlaps: number;
+  priority: number;
+  created_at: string;
+  is_active: boolean;
+  type_id: number;
+};
+
 export type AssessmentNext = {
   assessment_id: number;
   markup_type: MarkupType;

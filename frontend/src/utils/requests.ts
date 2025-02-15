@@ -66,6 +66,12 @@ export const linkBatchToMarkupType = async (
     .then((response) => response.data);
 };
 
+export const getAvailableBatches = async () => {
+  return await axios.get(API_PREFIX + "/api/v1/batches").then((response) => {
+    return response.data.data;
+  });
+};
+
 export const assessmentNext = async () => {
   return await axios
     .post(API_PREFIX + "/api/v1/assessments/next")
