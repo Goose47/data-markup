@@ -1,5 +1,5 @@
 import axios from "axios";
-import { AssessmentUpdateRq, MarkupTypeRq } from "./types";
+import { AssessmentUpdateRq, BatchRq, MarkupTypeRq } from "./types";
 
 const API_PREFIX = "https://api.rwfshr.ru";
 
@@ -40,15 +40,43 @@ export const deleteMarkupType = async (markupId: number) => {
     .then((response) => response.data);
 };
 
+export const createBatch = async (batch: BatchRq) => {
+  const form = new FormData();
+  form.append("name", batch.name);
+  form.append("overlaps", String(batch.overlaps));
+  form.append("priority", String(batch.priority));
+  form.append("type_id", String(batch.type_id));
+  form.append("markups", batch.markups);
+  return await axios
+    .post(API_PREFIX + "/api/v1/batches/", form)
+    .then((response) => response.data);
+};
+
+export const linkBatchToMarkupType = async (
+  batchId: number,
+  markupTypeId: number
+) => {
+  return await axios
+    .post(API_PREFIX + "/api/v1/batches/" + batchId + "/markupTypes", {
+      batch_id: batchId,
+      markup_type_id: markupTypeId,
+      name: "Linked at " + new Date().toString(),
+      fields: [],
+    })
+    .then((response) => response.data);
+};
+
 export const assessmentNext = async () => {
   return await axios
     .post(API_PREFIX + "/api/v1/assessments/next")
     .then((response) => response.data);
 };
 
-export const assessmentUpdate = async (assessmentId: number, data: AssessmentUpdateRq) => {
+export const assessmentUpdate = async (
+  assessmentId: number,
+  data: AssessmentUpdateRq
+) => {
   return await axios
     .put(API_PREFIX + "/api/v1/assessments/" + assessmentId, data)
     .then((response) => response.data);
 };
-
