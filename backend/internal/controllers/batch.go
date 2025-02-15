@@ -110,7 +110,7 @@ type storeBatchType struct {
 	Name     string `binding:"required" form:"name"`
 	Overlaps int    `binding:"required" form:"overlaps"`
 	Priority int    `binding:"required" form:"priority"`
-	IsActive bool   `form:"is_active"`
+	TypeID   uint   `binding:"required" json:"type_id"`
 }
 
 func (con *Batch) Store(c *gin.Context) {
@@ -142,8 +142,9 @@ func (con *Batch) Store(c *gin.Context) {
 		Name:      data.Name,
 		Overlaps:  data.Overlaps,
 		Priority:  data.Priority,
+		TypeID:    data.TypeID,
 		CreatedAt: time.Now(),
-		IsActive:  true,
+		IsActive:  false,
 	}
 
 	var userID *uint // todo retrieve from authenticated user (if admin then null)
@@ -305,6 +306,7 @@ func (con *Batch) Update(c *gin.Context) {
 	batch.Overlaps = data.Overlaps
 	batch.Priority = data.Priority
 	batch.IsActive = data.IsActive
+	batch.TypeID = data.TypeID
 
 	if err := con.db.Save(&batch).Error; err != nil {
 		log.Error("failed to update batch type", slog.Any("error", err))

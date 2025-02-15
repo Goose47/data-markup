@@ -36,6 +36,7 @@ type Batch struct {
 	Priority  int       `json:"priority"`
 	CreatedAt time.Time `json:"created_at"`
 	IsActive  bool      `json:"is_active"`
+	TypeID    uint      `json:"type_id"`
 	Markups   []Markup  `json:"-" gorm:"foreignKey:BatchID;references:ID"`
 	Users     []User    `json:"-" gorm:"many2many:user_batches;"`
 }
