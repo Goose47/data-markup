@@ -1,0 +1,6 @@
+@use '../../variables.scss';
+$block: '.#{variables.$ns}batch-create';
+
+#{$block} {
+
+}

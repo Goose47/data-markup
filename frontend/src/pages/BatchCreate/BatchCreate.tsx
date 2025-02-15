@@ -1,27 +1,19 @@
-import { CircleInfoFill } from "@gravity-ui/icons";
-import {
-  MarkupForm,
-  MarkupTypeForm,
-} from "../../components/MarkupForm/MarkupForm";
-import { block } from "../../utils/block";
-import "./MarkupCreate.scss";
-import { MarkupTypeField } from "../../utils/types";
-import { handleCreateMarkupType } from "../../utils/requests";
 import { useState } from "react";
+import { block } from "../../utils/block";
+import "./BatchCreate.scss";
+import { BatchForm } from "../../components/BatchForm/BatchForm";
+import { CircleInfoFill } from "@gravity-ui/icons";
 
-const b = block("markup-create");
+const b = block("batch-create");
 
-export const MarkupCreate = () => {
-  const [markups, setMarkups] = useState<MarkupTypeForm[]>([]);
+export const BatchCreate = () => {
   const [name, setName] = useState<string>("");
 
-  const handleCreate = (result: MarkupTypeField[]) => {
-    handleCreateMarkupType({ name: name, fields: result });
-  };
+  const handleCreate = () => {};
 
   return (
     <div className={b()}>
-      <MarkupForm
+      <BatchForm
         submit={handleCreate}
         title={"Добавление типа разметки"}
         name={name}
@@ -38,8 +30,6 @@ export const MarkupCreate = () => {
             шаблон.
           </>
         }
-        markups={markups}
-        setMarkups={setMarkups}
         buttonText={"Добавить"}
       />
     </div>
