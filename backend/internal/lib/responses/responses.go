@@ -33,3 +33,9 @@ func NotFoundError(c *gin.Context) {
 		"error": "not found",
 	})
 }
+
+func ForbiddenError(c *gin.Context) {
+	c.JSON(http.StatusForbidden, gin.H{
+		"error": "forbidden",
+	})
+}
