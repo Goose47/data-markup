@@ -71,6 +71,8 @@ func NewRouter(
 				assessments.POST("", assessmentCon.Store)
 				assessments.PUT("/:id", assessmentCon.Update)
 				assessments.DELETE("/:id", assessmentCon.Destroy)
+
+				assessments.POST("/next", assessmentCon.Next)
 			}
 		}
 	}

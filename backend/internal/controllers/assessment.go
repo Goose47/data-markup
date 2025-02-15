@@ -115,11 +115,19 @@ type storeAssessmentField struct {
 	MarkupTypeFieldID uint    `binding:"required" json:"markup_type_field_id"`
 }
 
+// Store creates models.Assessment for given models.Markup. Is used only by admins.
 // todo: ensure there is only one models.Assessment for models.Markup for every models.Assessment.UserID
 // todo: forbid to create models.Assessment when models.Markup is already processed if models.User is not admin
 func (con *Assessment) Store(c *gin.Context) {
 	const op = "AssessmentController.Store"
 	log := con.log.With(slog.String("op", op))
+
+	var userID uint = 1 // todo retrieve from authenticated user
+	var isAdmin = true  // todo retrieve from authenticated user
+	if !isAdmin {
+		responses.ForbiddenError(c)
+		return
+	}
 
 	var data storeAssessment
 
@@ -128,13 +136,10 @@ func (con *Assessment) Store(c *gin.Context) {
 		return
 	}
 
-	var userID uint = 3 // todo retrieve from authenticated user
-	var isAdmin = false // todo retrieve from authenticated user
-
 	assessment := models.Assessment{
 		CreatedAt: time.Now(),
 		UserID:    userID,
-		IsPrior:   isAdmin,
+		IsPrior:   true,
 		MarkupID:  data.MarkupID,
 	}
 
@@ -146,7 +151,8 @@ func (con *Assessment) Store(c *gin.Context) {
 		}
 	}
 
-	assessment.Hash = assessment.CalculateHash()
+	hash := assessment.CalculateHash()
+	assessment.Hash = &hash
 
 	tx := con.db.Begin()
 	if err := tx.Error; err != nil {
@@ -163,13 +169,83 @@ func (con *Assessment) Store(c *gin.Context) {
 		return
 	}
 
-	if err := updateCorrectAssessment(log, tx, assessment, isAdmin); err != nil {
+	if err := updateCorrectAssessment(log, tx, assessment, true); err != nil {
 		tx.Rollback()
 		responses.InternalServerError(c)
 	}
 
 	if err := tx.Commit().Error; err != nil {
 		log.Error("failed to commit transaction", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"id": assessment.ID,
+	})
+}
+
+// Next selects available markup and creates empty models.Assessment for it.
+func (con *Assessment) Next(c *gin.Context) {
+	const op = "AssessmentController.Next"
+	log := con.log.With(slog.String("op", op))
+
+	var userID uint = 3   // todo retrieve from authenticated user
+	var isAssessor = true // todo retrieve from authenticated user
+	if !isAssessor {
+		responses.ForbiddenError(c)
+		return
+	}
+
+	var priorities []int
+	err := con.db.
+		Model(models.Batch{}).
+		Order("priority desc").
+		Distinct("priority").
+		Pluck("priority", &priorities).Error
+
+	if err != nil {
+		log.Error("unable to fetch priorities", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+	// todo do smth w priorities
+
+	var res struct {
+		MarkupID         uint
+		AssessmentsCount int64
+	}
+	err = con.db.
+		Select("markups.id, COUNT(assessments.id) as assessments_count").
+		Joins("batches ON markups.batch_id = batches.id").
+		Joins("assessments ON assessments.markup_id = markups.id").
+		Having("assessments_count < batches.overlaps").
+		First(&res).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Warn("markup not found")
+			responses.NotFoundError(c)
+			return
+		}
+
+		log.Error("failed to find markup", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+
+	assessment := models.Assessment{
+		UserID:    userID,
+		MarkupID:  res.MarkupID,
+		CreatedAt: time.Now(),
+		IsPrior:   false,
+		Hash:      nil,
+	}
+
+	// Save assessment.
+	if err := con.db.Create(&assessment).Error; err != nil {
+		con.db.Rollback()
+		log.Error("failed to create assessment", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
