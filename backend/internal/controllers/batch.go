@@ -110,7 +110,7 @@ type storeBatchType struct {
 	Name     string `binding:"required" form:"name"`
 	Overlaps int    `binding:"required" form:"overlaps"`
 	Priority int    `binding:"required,gte=1,lte=10" form:"priority"`
-	TypeID   uint   `binding:"required" json:"type_id"`
+	TypeID   uint   `binding:"required" form:"type_id"`
 }
 
 func (con *Batch) Store(c *gin.Context) {
