@@ -21,4 +21,18 @@ export type MarkupType = {
   fields?: MarkupTypeField[];
 };
 
+export type AssessmentNext = {
+  assessment_id: number;
+  markup_type: MarkupType;
+}
+
+export type AssesmentUpdateField = {
+  text: string | null;
+  markup_type_field_id: number;
+}
+
+export type AssessmentUpdateRq = {
+  fields: AssesmentUpdateField[];
+}
+
 export type MarkupTypeFull = RequiredFields<MarkupType, "fields">;

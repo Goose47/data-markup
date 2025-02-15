@@ -15,12 +15,21 @@ const b = block("my-markup-type");
 
 export type MarkupTypeIds = "1" | "2" | "3" | "4" | "5";
 
+export type FieldValue = {
+  value: string;
+  assessment_type_id: number;
+}
+
 export const MyMarkupType = ({
   triggerRerender,
   markupType,
+  isAdmin,
+  onUpdateValue,
 }: {
   triggerRerender: () => void;
   markupType: MarkupType;
+  isAdmin: boolean;
+  onUpdateValue?: (value: string[][]) => void;
 }) => {
   const [content, setContent] = useState<MarkupTypeFull>();
   const [loading, setLoading] = useState<boolean>();
@@ -45,34 +54,39 @@ export const MyMarkupType = ({
     return result;
   }, [content]);
 
-  const [values, setValues] = useState<string[][]>([]);
+  const [values, setValues] = useState<FieldValue[][]>([]);
+
+  useEffect(() => {
+    console.log(values)
+  }, [values])
 
   useEffect(() => {
     if (groupedFields) {
       setValues(
         Object.values(groupedFields).map((value: MarkupTypeField[]) => {
+          const meta = {
+            fieldId: value[0].id, assessment_type_id: value[0].assessment_type_id
+          };
+
           if (value.length > 0) {
             if (value[0].assessment_type_id === 1) {
-              return [String(value[0].id)];
+              return [{ value: String(value[0].id), ...meta }];
             } else {
               return [];
             }
           }
-          return [""];
+          return [{ value: "", ...meta }];
         })
       );
     }
   }, [groupedFields]);
 
-  const handleUpdateValues = (index: number, newValues: string[]) => {
+  const handleUpdateValues = (index: number, newValues: FieldValue[]) => {
     const valuesCopy = _.cloneDeep(values);
     valuesCopy[index] = newValues;
+    onUpdateValue?.(valuesCopy);
     setValues(valuesCopy);
   };
-
-  useEffect(() => {
-    console.log(values);
-  }, [values]);
 
   return (
     <div className={b()}>
@@ -82,24 +96,30 @@ export const MyMarkupType = ({
         ) : (
           content && (
             <div className={b("wrapper")}>
-              <div className={b("edit")}>
-                <Link to={`/markup/${markupType.id}`}>
-                  <PencilToLine width={20} height={20}></PencilToLine>
-                </Link>
-              </div>
-              <div className={b("delete")}>
-                <ButtonWithConfirm
-                  handleSubmit={() => {
-                    console.log("GAGAG");
-                    deleteMarkupType(markupType.id).then(async () => {
-                      triggerRerender();
-                    });
-                  }}
-                  confirmText="Вы действительно хотите удалить этот тип разметки?"
-                >
-                  <TrashBin width={20} height={20}></TrashBin>
-                </ButtonWithConfirm>
-              </div>
+              {
+                isAdmin && (
+                  <>
+                    <div className={b("edit")}>
+                      <Link to={`/markup/${markupType.id}`}>
+                        <PencilToLine width={20} height={20}></PencilToLine>
+                      </Link>
+                    </div>
+                    <div className={b("delete")}>
+                      <ButtonWithConfirm
+                        handleSubmit={() => {
+                          console.log("GAGAG");
+                          deleteMarkupType(markupType.id).then(async () => {
+                            triggerRerender();
+                          });
+                        }}
+                        confirmText="Вы действительно хотите удалить этот тип разметки?"
+                      >
+                        <TrashBin width={20} height={20}></TrashBin>
+                      </ButtonWithConfirm>
+                    </div>
+                  </>
+                )
+              }
               <h2>{content.name}</h2>
               <div>
                 {Object.entries(groupedFields).map(

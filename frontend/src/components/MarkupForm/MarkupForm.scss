@@ -42,16 +42,16 @@ $block: '.#{variables.$ns}markup-form';
             display: flex;  
             justify-content: center;
             cursor: pointer;
-            &:hover {
-                svg {
-                    color: #{variables.$primary};
+            // &:hover {
+                // svg {
+                    // color: #{variables.$primary};
 
-                }
-            }
+                // }
+            // }
         }
 
         svg {
-            color: #{variables.$dark};
+            // color: #{variables.$dark};
             transition: 0.2s;
 
             &:hover {

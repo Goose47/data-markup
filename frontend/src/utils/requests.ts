@@ -1,5 +1,5 @@
 import axios from "axios";
-import { MarkupTypeRq } from "./types";
+import { AssessmentUpdateRq, MarkupTypeRq } from "./types";
 
 const API_PREFIX = "https://api.rwfshr.ru";
 
@@ -39,3 +39,16 @@ export const deleteMarkupType = async (markupId: number) => {
     .delete(API_PREFIX + "/api/v1/markupTypes/" + markupId)
     .then((response) => response.data);
 };
+
+export const assessmentNext = async () => {
+  return await axios
+    .post(API_PREFIX + "/api/v1/assessments/next")
+    .then((response) => response.data);
+};
+
+export const assessmentUpdate = async (assessmentId: number, data: AssessmentUpdateRq) => {
+  return await axios
+    .put(API_PREFIX + "/api/v1/assessments/" + assessmentId, data)
+    .then((response) => response.data);
+};
+
