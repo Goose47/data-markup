@@ -28,7 +28,13 @@
     "lint": "npm run lint:js && npm run lint:styles && npm run lint:prettier"
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": "react-app",
+    "plugins": [
+      "only-warn"
+    ],
+    "rules": {
+      "no-unused-vars": "off"
+    }
   },
   "browserslist": [
     "extends @gravity-ui/browserslist-config"
@@ -44,6 +50,7 @@
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "eslint": "^8.57.1",
+    "eslint-plugin-only-warn": "^1.1.0",
     "lint-staged": "^14.0.1",
     "prettier": "^3.3.3",
     "sass": "^1.80.6",

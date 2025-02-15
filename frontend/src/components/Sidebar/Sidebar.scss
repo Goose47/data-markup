@@ -24,7 +24,7 @@ $block: '.#{variables.$ns}sidebar';
                 list-style: none;
                 margin-bottom: 15px;
                 a {
-                    color: #{variables.$dark};
+                    // color: #{variables.$dark};
                     text-decoration: none;
                     &._active {
                         font-weight: 500;

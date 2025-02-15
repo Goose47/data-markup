@@ -31,6 +31,7 @@ export const MyMarkupTypes = () => {
       <div className={b("list")}>
         {markupTypes.map((markupType) => (
           <MyMarkupType
+            isAdmin={true}
             markupType={markupType}
             triggerRerender={() => setRerenderState((v) => v + 1)}
           />
