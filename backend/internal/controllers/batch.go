@@ -395,17 +395,16 @@ func (con *Batch) TieMarkupType(c *gin.Context) {
 
 	var markupType models.MarkupType
 	if data.MarkupTypeID != nil {
+		var existingMarkupType models.MarkupType
 		err := con.db.
 			Preload("Fields.AssessmentType").
 			Where("id = ?", data.MarkupTypeID).
-			First(&markupType).Error
+			First(&existingMarkupType).Error
 
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				log.Warn("markupType not found")
-				c.JSON(http.StatusNotFound, gin.H{
-					"error": "markupType not found",
-				})
+				responses.NotFoundError(c)
 				return
 			}
 
@@ -414,24 +413,30 @@ func (con *Batch) TieMarkupType(c *gin.Context) {
 			return
 		}
 
-		markupType.ID = 0
-		for _, field := range markupType.Fields {
-			field.ID = 0
-			field.MarkupTypeID = 0
-		}
-	} else {
 		markupType = models.MarkupType{
-			Name: data.Name,
+			Name: existingMarkupType.Name,
 		}
-		markupType.Fields = make([]models.MarkupTypeField, 0, len(data.Fields))
-		for _, field := range data.Fields {
-			nextField := models.MarkupTypeField{
+		markupType.Fields = make([]models.MarkupTypeField, len(existingMarkupType.Fields))
+		for i, field := range existingMarkupType.Fields {
+			markupType.Fields[i] = models.MarkupTypeField{
 				AssessmentTypeID: field.AssessmentTypeID,
 				Name:             field.Name,
 				Label:            field.Label,
 				GroupID:          field.GroupID,
 			}
-			markupType.Fields = append(markupType.Fields, nextField)
+		}
+	} else {
+		markupType = models.MarkupType{
+			Name: data.Name,
+		}
+		markupType.Fields = make([]models.MarkupTypeField, len(data.Fields))
+		for i, field := range data.Fields {
+			markupType.Fields[i] = models.MarkupTypeField{
+				AssessmentTypeID: field.AssessmentTypeID,
+				Name:             field.Name,
+				Label:            field.Label,
+				GroupID:          field.GroupID,
+			}
 		}
 	}
 
