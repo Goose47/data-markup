@@ -92,7 +92,7 @@ type Assessment struct {
 	CreatedAt time.Time         `json:"created_at"`
 	UpdatedAt *time.Time        `json:"updated_at" gorm:"autoUpdateTime"`
 	IsPrior   bool              `json:"is_prior"`
-	Hash      string            `json:"hash"`
+	Hash      *string           `json:"hash"`
 	Fields    []AssessmentField `json:"fields" gorm:"foreignKey:AssessmentID;references:ID"`
 	User      User              `json:"-" gorm:"foreignKey:UserID;references:ID"`
 	Markup    Markup            `json:"-" gorm:"foreignKey:MarkupID;references:ID"`
