@@ -57,6 +57,7 @@ func NewRouter(
 				batches.DELETE("/:id", batchCon.Destroy)
 
 				batches.POST("/:id/markupTypes", batchCon.TieMarkupType)
+				batches.PUT("/:id/toggleActive", batchCon.ToggleIsActive)
 			}
 			markups := v1.Group("/markups")
 			{

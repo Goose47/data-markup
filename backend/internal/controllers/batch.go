@@ -305,7 +305,6 @@ func (con *Batch) Update(c *gin.Context) {
 	batch.Name = data.Name
 	batch.Overlaps = data.Overlaps
 	batch.Priority = data.Priority
-	batch.IsActive = data.IsActive
 	batch.TypeID = data.TypeID
 
 	if err := con.db.Save(&batch).Error; err != nil {
@@ -315,6 +314,43 @@ func (con *Batch) Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, "OK")
+}
+
+func (con *Batch) ToggleIsActive(c *gin.Context) {
+	const op = "BatchController.ToggleIsActive"
+	id := c.Param("id")
+
+	log := con.log.With(slog.String("op", op), slog.String("id", id))
+
+	var batch models.Batch
+	err := con.db.
+		Where("id = ?", id).
+		First(&batch).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Warn("batch not found")
+			responses.NotFoundError(c)
+			return
+		}
+
+		log.Error("failed to find batch", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+
+	batch.IsActive = !batch.IsActive
+
+	if err := con.db.Save(&batch).Error; err != nil {
+		con.db.Rollback()
+		log.Error("failed to toggle is_active field", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"is_active": batch.IsActive,
+	})
 }
 
 func (con *Batch) Destroy(c *gin.Context) {
