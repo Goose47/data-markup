@@ -13,6 +13,8 @@ func main() {
 	log := logger.New(cfg.Env)
 	app := apppkg.New(log, cfg.Env, cfg.Port, cfg.DB)
 
+	app.TaskManager.Run()
+
 	err := app.Server.Serve()
 	log.Error("application has stopped: %s", slog.Any("error", err))
 }
