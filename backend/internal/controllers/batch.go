@@ -274,6 +274,7 @@ type updateBatchType struct {
 	Overlaps int    `binding:"required" json:"overlaps"`
 	Priority int    `binding:"required,gte=1,lte=10" json:"priority"`
 	TypeID   uint   `binding:"required" json:"type_id"`
+	IsActive bool   `binding:"required" json:"is_active"`
 }
 
 func (con *Batch) Update(c *gin.Context) {
@@ -312,6 +313,7 @@ func (con *Batch) Update(c *gin.Context) {
 	batch.Overlaps = data.Overlaps
 	batch.Priority = data.Priority
 	batch.TypeID = data.TypeID
+	batch.IsActive = data.IsActive
 
 	if err := con.db.Save(&batch).Error; err != nil {
 		log.Error("failed to update batch type", slog.Any("error", err))
