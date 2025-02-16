@@ -32,7 +32,7 @@ export const Sidebar = () => {
 
   axios.interceptors.request.use(function (config) {
     const token =
-      "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJpc3MiOiJtYXJrdXBzIiwiZXhwIjoxNzM5ODA3ODIxLCJpYXQiOjE3Mzk3MjE0MjF9.WzcHA1AMeaIPVnanvBnutXUszM0sEB5UluRtdeQUSso";
+      "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjozLCJpc3MiOiJtYXJrdXBzIiwiZXhwIjoxNzM5ODA4MTIxLCJpYXQiOjE3Mzk3MjE3MjF9.I5UIAKmQz63BlaalMVOVKf-TdISlufeivfYzo3Qh7go";
     config.headers.Authorization = token;
 
     return config;
