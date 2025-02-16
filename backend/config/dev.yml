@@ -1,5 +1,7 @@
 env: "local"
 port: 8000
+jwt:
+  secret: "secret"
 db:
   user: "root"
   pass: "root"
