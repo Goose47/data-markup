@@ -63,7 +63,7 @@ export const Assessment = () => {
                     {currentAssessment === "error" && 
                         <Alert title="Кончились задания 🤯" theme="danger" />}
                 </>
-                : <Flex direction="column" gap={4}>
+                : <Flex direction="column" gap={8}>
                     <MarkupData assessment={currentAssessment} /> 
                     <MyMarkupType
                         isAdmin={false}
@@ -82,6 +82,7 @@ export const Assessment = () => {
                                 theme: "success",
                             })
                         }}
+                        disabled={currentValue.some(value => value.length === 0)}
                     >
                         Отправить
                     </Button>

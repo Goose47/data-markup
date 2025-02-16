@@ -98,7 +98,6 @@ export const MarkupData = ({ assessment }: { assessment: AssessmentData }) => {
     const fields = toParsedFields(data, assessment.batchType);
 
     if (assessment.batchType === "compare") {
-        // Group fields by group number; ungrouped fields go to a special key.
         const UNGROUPED = "Ungrouped";
         const groupedFields = Object.groupBy(fields, (field) => field.group ?? UNGROUPED);
         const ungrouped = groupedFields[UNGROUPED] ?? [];
@@ -106,7 +105,6 @@ export const MarkupData = ({ assessment }: { assessment: AssessmentData }) => {
 
         const groupKeys = Object.keys(groupedFields);
         if (groupKeys.length === 0) {
-            // Fallback if no groups exist.
             return (
                 <div className={b("wrapper")}>
                     <Flex direction="column" gap={4}>
@@ -118,22 +116,17 @@ export const MarkupData = ({ assessment }: { assessment: AssessmentData }) => {
             );
         }
 
-        // Use the first available group to establish ordering for group-specific rows.
         const firstGroup = Number(groupKeys[0]);
         const groupSpecificCount = groupedFields[firstGroup]?.length ?? 0;
-        // Total rows: header row + (ungrouped fields + group-specific fields)
         const totalRows = 1 + ungrouped.length + groupSpecificCount;
 
-        // Build left-column cells:
-        // First cell is the header label (e.g. "Группа1"), then ungrouped field keys, then group-specific field keys.
         const leftColumnCells: React.ReactNode[] = [];
-        leftColumnCells.push("Группа1");
+        leftColumnCells.push("Группа");
         ungrouped.forEach((field) => leftColumnCells.push(field.key));
         for (let i = 0; i < groupSpecificCount; i++) {
-            leftColumnCells.push(groupedFields[firstGroup]?.[i].key);
+            leftColumnCells.push(groupedFields[firstGroup]?.[i].key.slice(0, -1));
         }
 
-        // Build each group's column.
         const groupColumns: React.ReactNode[][] = [];
         groupKeys.forEach((group) => {
             const groupArr = groupedFields[group as unknown as number] ?? [];
@@ -152,19 +145,16 @@ export const MarkupData = ({ assessment }: { assessment: AssessmentData }) => {
             groupColumns.push(colCells);
         });
 
-        // Total columns: left column + one column per group.
         const totalCols = 1 + groupColumns.length;
         const gridCells: React.ReactNode[] = [];
 
-        // Flatten the grid cells (row by row).
         for (let row = 0; row < totalRows; row++) {
-            // Left column cell.
             gridCells.push(
                 <div key={`cell-${row}-0`} className={b("grid-cell", "label")}>
                     <Text variant="header-1">{leftColumnCells[row]}</Text>
                 </div>
             );
-            // Each group's cell.
+            
             for (let col = 0; col < groupColumns.length; col++) {
                 gridCells.push(
                     <div key={`cell-${row}-${col + 1}`} className={b("grid-cell")}>
@@ -181,7 +171,7 @@ export const MarkupData = ({ assessment }: { assessment: AssessmentData }) => {
                     style={{
                         display: "grid",
                         gridTemplateColumns: `repeat(${totalCols}, 1fr)`,
-                        gap: "8px",
+                        gap: "var(--g-spacing-5)",
                     }}
                 >
                     {gridCells}
@@ -190,7 +180,6 @@ export const MarkupData = ({ assessment }: { assessment: AssessmentData }) => {
         );
     }
 
-    // For non-"compare" batch types, render as before.
     return (
         <div className={b("wrapper")}>
             <Flex direction="column" gap={4}>

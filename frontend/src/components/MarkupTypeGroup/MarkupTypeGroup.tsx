@@ -43,7 +43,7 @@ export const MarkupTypeGroup = ({
                 assessment_type_id: field.assessment_type_id,
               } ]);
             }}
-            checked={value[0].value === String(field.id)}
+            checked={value[0]?.value === String(field.id)}
           />
         ))}
       </div>
@@ -128,7 +128,7 @@ export const MarkupTypeGroup = ({
           {fields[0].label}
         </label>
         <TextInput
-          value={value[0].value}
+          value={value[0]?.value}
           onUpdate={(v) => {
             onUpdate([{value: v, assessment_type_id: fields[0].assessment_type_id, fieldIdFuckBackend: fields[0].id}]);
           }}
