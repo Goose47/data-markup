@@ -71,7 +71,9 @@ func (con *Batch) Index(c *gin.Context) {
 	}
 	tx.Count(&total)
 
-	tx = con.db.Limit(perPage).Offset(offset)
+	tx = con.db.Limit(perPage).
+		Offset(offset).
+		Order("created_at DESC")
 	if !isAdmin {
 		tx = tx.Where("user_id = ?", userID)
 	}
