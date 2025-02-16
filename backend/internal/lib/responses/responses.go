@@ -39,3 +39,9 @@ func ForbiddenError(c *gin.Context) {
 		"error": "forbidden",
 	})
 }
+
+func UnauthorizedError(c *gin.Context) {
+	c.JSON(http.StatusUnauthorized, gin.H{
+		"error": "unauthorized",
+	})
+}
