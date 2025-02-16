@@ -66,6 +66,7 @@ func (con *Markup) Index(c *gin.Context) {
 		Count(&total)
 
 	con.db.Limit(perPage).
+		Preload("Assessments").
 		Where("batch_id = ?", batchID).
 		Offset(offset).
 		Find(&markups)
@@ -105,7 +106,7 @@ func (con *Markup) Find(c *gin.Context) {
 	var correctAssessment *models.Assessment
 	if markup.StatusID == markupStatus.Processed {
 		err := con.db.
-			Where("hash = ?", markup.CorrectAssessmentHash).
+			Where("hash = ? and markup_id = ?", markup.CorrectAssessmentHash, markup.ID).
 			First(&correctAssessment).Error
 
 		if err != nil {
