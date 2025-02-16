@@ -18,18 +18,19 @@ export type MarkupTypeIds = "1" | "2" | "3" | "4" | "5";
 export type FieldValue = {
   value: string;
   assessment_type_id: number;
+  fieldIdFuckBackend?: number;
 }
 
 export const MyMarkupType = ({
   triggerRerender,
   markupType,
-  isAdmin,
   onUpdateValue,
+  isAdmin,
 }: {
   triggerRerender: () => void;
   markupType: MarkupType;
   isAdmin: boolean;
-  onUpdateValue?: (value: string[][]) => void;
+  onUpdateValue?: (value: FieldValue[][]) => void;
 }) => {
   const [content, setContent] = useState<MarkupTypeFull>();
   const [loading, setLoading] = useState<boolean>();
@@ -57,8 +58,8 @@ export const MyMarkupType = ({
   const [values, setValues] = useState<FieldValue[][]>([]);
 
   useEffect(() => {
-    console.log(values)
-  }, [values])
+    onUpdateValue?.(values)
+  }, [onUpdateValue, values])
 
   useEffect(() => {
     if (groupedFields) {
@@ -84,7 +85,6 @@ export const MyMarkupType = ({
   const handleUpdateValues = (index: number, newValues: FieldValue[]) => {
     const valuesCopy = _.cloneDeep(values);
     valuesCopy[index] = newValues;
-    onUpdateValue?.(valuesCopy);
     setValues(valuesCopy);
   };
 

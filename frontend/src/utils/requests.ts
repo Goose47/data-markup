@@ -99,3 +99,10 @@ export const assessmentUpdate = async (
     .put(API_PREFIX + "/api/v1/assessments/" + assessmentId, data)
     .then((response) => response.data);
 };
+
+export const batchFind = async (batchId: number) => {
+  return await axios
+    .get(API_PREFIX + "/api/v1/batches/" + batchId)
+    .then((response) => response.data)
+};
+
