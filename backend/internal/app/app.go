@@ -32,6 +32,7 @@ func New(
 	env string,
 	port int,
 	dbConfig config.DB,
+	jwtConfig config.JWT,
 ) *App {
 	//db, err := mysql.New(dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Pass, dbConfig.DBName)
 	db, err := postgres.New(dbConfig.Host, dbConfig.Port, dbConfig.User, dbConfig.Pass, dbConfig.DBName)
@@ -48,15 +49,19 @@ func New(
 	batchCon := controllers.NewBatch(log, db)
 	markupCon := controllers.NewMarkup(log, db)
 	assessmentCon := controllers.NewAssessment(log, db)
+	authCon := controllers.NewAuth(log, db, jwtConfig.Secret)
 
 	router := server.NewRouter(
 		log,
 		env,
+		jwtConfig.Secret,
+		db,
 		helloCon,
 		markupTypeCon,
 		batchCon,
 		markupCon,
 		assessmentCon,
+		authCon,
 	)
 	serverApp := serverapp.New(log, port, router)
 
