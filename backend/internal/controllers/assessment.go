@@ -7,7 +7,9 @@ import (
 	"gorm.io/gorm"
 	"log/slog"
 	"markup/internal/domain/enums/markupStatus"
+	"markup/internal/domain/enums/roles"
 	"markup/internal/domain/models"
+	"markup/internal/lib/auth"
 	"markup/internal/lib/responses"
 	"markup/internal/lib/validation/query"
 	"net/http"
@@ -122,8 +124,12 @@ func (con *Assessment) Store(c *gin.Context) {
 	const op = "AssessmentController.Store"
 	log := con.log.With(slog.String("op", op))
 
-	var userID uint = 1 // todo retrieve from authenticated user
-	var isAdmin = true  // todo retrieve from authenticated user
+	user, err := auth.User(c)
+	if err != nil {
+		responses.UnauthorizedError(c)
+		return
+	}
+	var isAdmin = user.HasRole(roles.Admin)
 	if !isAdmin {
 		responses.ForbiddenError(c)
 		return
@@ -138,7 +144,7 @@ func (con *Assessment) Store(c *gin.Context) {
 
 	assessment := models.Assessment{
 		CreatedAt: time.Now(),
-		UserID:    userID,
+		UserID:    user.ID,
 		IsPrior:   true,
 		MarkupID:  data.MarkupID,
 	}
@@ -190,15 +196,19 @@ func (con *Assessment) Next(c *gin.Context) {
 	const op = "AssessmentController.Next"
 	log := con.log.With(slog.String("op", op))
 
-	var userID uint = 3   // todo retrieve from authenticated user
-	var isAssessor = true // todo retrieve from authenticated user
+	user, err := auth.User(c)
+	if err != nil {
+		responses.UnauthorizedError(c)
+		return
+	}
+	var isAssessor = user.HasRole(roles.Assessor)
 	if !isAssessor {
 		responses.ForbiddenError(c)
 		return
 	}
 
 	var priorities []int
-	err := con.db.
+	err = con.db.
 		Model(models.Batch{}).
 		Order("priority desc").
 		Distinct("priority").
@@ -214,7 +224,7 @@ func (con *Assessment) Next(c *gin.Context) {
 	var pendingAssessment models.Assessment
 	err = con.db.Model(models.Assessment{}).
 		Preload("Markup.Batch.MarkupTypes.Fields.AssessmentType").
-		Where("hash IS NULL and user_id = ?", userID).
+		Where("hash IS NULL and user_id = ?", user.ID).
 		First(&pendingAssessment).Error
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -254,7 +264,7 @@ func (con *Assessment) Next(c *gin.Context) {
 	}
 
 	assessment := models.Assessment{
-		UserID:    userID,
+		UserID:    user.ID,
 		MarkupID:  res.MarkupID,
 		CreatedAt: time.Now(),
 		IsPrior:   false,
@@ -373,9 +383,14 @@ func (con *Assessment) Update(c *gin.Context) {
 		return
 	}
 
-	var userID uint = 3 // todo: retrieve from authenticated user
-	var isAdmin = false // todo retrieve from authenticated user
-	if userID != assessment.UserID {
+	user, err := auth.User(c)
+	if err != nil {
+		responses.UnauthorizedError(c)
+		return
+	}
+	var isAdmin = user.HasRole(roles.Admin)
+
+	if user.ID != assessment.UserID {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "cannot update assessment of another user",
 		})

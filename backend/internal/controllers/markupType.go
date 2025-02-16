@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 	"log/slog"
 	"markup/internal/domain/models"
+	"markup/internal/lib/auth"
 	"markup/internal/lib/responses"
 	"markup/internal/lib/validation/query"
 	"net/http"
@@ -127,10 +128,16 @@ func (con *MarkupType) Store(c *gin.Context) {
 		responses.InternalServerError(c)
 		return
 	}
-	var userID *uint // todo retrieve from authenticated user
+
+	user, err := auth.User(c)
+	if err != nil {
+		responses.UnauthorizedError(c)
+		return
+	}
+
 	markupType := models.MarkupType{
 		Name:   data.Name,
-		UserID: userID,
+		UserID: &user.ID,
 	}
 
 	// todo: make only one query to save all models. See Assesment.Store

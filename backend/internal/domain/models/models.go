@@ -18,7 +18,7 @@ type User struct {
 	Assessments []Assessment `json:"-" gorm:"foreignKey:UserID;references:ID"`
 }
 
-func (u User) hasRole(roleID uint) bool {
+func (u User) HasRole(roleID uint) bool {
 	for _, role := range u.Roles {
 		if role.ID == roleID {
 			return true
