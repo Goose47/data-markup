@@ -2,5 +2,40 @@
 $block: '.#{variables.$ns}batch-card';
 
 #{$block} {
+    &__card {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 15px;
+        margin-bottom: 15px;
+        position: relative;
+    }
+    &__wrapper {
+        width: 100%;
+    }
+    h2 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        max-width: 300px;
+    }
 
+    &__edit, &__toggle {
+        position: absolute;
+        right: -30px;
+        top: 15px;
+        cursor: pointer;
+        svg {
+            transition: 0.2s;
+        }
+        &:hover {
+            svg {
+                color: var(--g-color-base-brand);
+            }
+        }
+    }
+    &__toggle {
+        right: 15px;
+        display: flex;
+        gap: 15px
+    }
 }

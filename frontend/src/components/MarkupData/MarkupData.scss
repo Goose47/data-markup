@@ -1,0 +1,14 @@
+@use '../../variables.scss';
+$block: '.#{variables.$ns}markup-data';
+
+#{$block} {
+    &__image {
+        max-width: 300px;
+        height: auto;
+    }
+
+    &__compare {
+        width: 100%;
+        overflow-x: scroll;
+    }
+}

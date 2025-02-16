@@ -130,7 +130,7 @@ export const MarkupTypeGroup = ({
         <TextInput
           value={value[0].value}
           onUpdate={(v) => {
-            onUpdate([{value: v, assessment_type_id: fields[0].assessment_type_id}]);
+            onUpdate([{value: v, assessment_type_id: fields[0].assessment_type_id, fieldIdFuckBackend: fields[0].id}]);
           }}
           placeholder={fields[0].label}
           id={`${uniqueId}_${String(fields[0].group_id)}_${String(fields[0].id)}`}
