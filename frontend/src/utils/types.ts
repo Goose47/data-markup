@@ -39,6 +39,14 @@ export type BatchCardType = {
   type_id: number;
 };
 
+export type BatchMarkupType = {
+  id: number;
+  batch_id: number;
+  status_id: number;
+  data: string;
+  assessments: any;
+};
+
 export type AssessmentNext = {
   assessment_id: number;
   /** assume it's a valid JSON */

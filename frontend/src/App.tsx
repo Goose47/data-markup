@@ -10,6 +10,7 @@ import { MarkupEdit } from "./pages/MarkupEdit/MarkupEdit";
 import { BatchCreate } from "./pages/BatchCreate/BatchCreate";
 import { Assessment } from "./pages/Assessment/Assessment";
 import { MyBatchesCards } from "./pages/MyBatchesCards/MyBatchesCards";
+import { BatchMarkup } from "./pages/BatchMarkup/BatchMarkup";
 
 const b = block("app");
 
@@ -26,6 +27,7 @@ export const App = () => {
               <Route path="/markup" element={<MyMarkupTypes />}></Route>
               <Route path="/batch/create" element={<BatchCreate />}></Route>
               <Route path="/batch" element={<MyBatchesCards />}></Route>
+              <Route path="/batch/:batchId" element={<BatchMarkup />}></Route>
               <Route path="/markup/:id" element={<MarkupEdit />}></Route>
               <Route path="/assessment" element={<Assessment />}></Route>
             </Routes>

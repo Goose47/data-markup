@@ -30,6 +30,14 @@ export const Sidebar = () => {
     }
   );
 
+  axios.interceptors.request.use(function (config) {
+    const token =
+      "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJpc3MiOiJtYXJrdXBzIiwiZXhwIjoxNzM5ODA3ODIxLCJpYXQiOjE3Mzk3MjE0MjF9.WzcHA1AMeaIPVnanvBnutXUszM0sEB5UluRtdeQUSso";
+    config.headers.Authorization = token;
+
+    return config;
+  });
+
   return (
     <div className={b()}>
       <div className={b("user")}>

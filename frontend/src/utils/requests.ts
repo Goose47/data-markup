@@ -85,6 +85,24 @@ export const batchUpdate = async (batch: BatchCardType) => {
   });
 };
 
+export const getLinkedMarkupsToBatch = async (
+  batchId: number,
+  page: number,
+  perPage: number
+) => {
+  return await axios
+    .get(
+      API_PREFIX +
+        "/api/v1/markups?" +
+        new URLSearchParams({
+          batch_id: String(batchId),
+          page: String(page),
+          per_page: String(perPage),
+        }).toString()
+    )
+    .then((response) => response.data);
+};
+
 export const assessmentNext = async () => {
   return await axios
     .post(API_PREFIX + "/api/v1/assessments/next")
@@ -103,6 +121,5 @@ export const assessmentUpdate = async (
 export const batchFind = async (batchId: number) => {
   return await axios
     .get(API_PREFIX + "/api/v1/batches/" + batchId)
-    .then((response) => response.data)
+    .then((response) => response.data);
 };
-

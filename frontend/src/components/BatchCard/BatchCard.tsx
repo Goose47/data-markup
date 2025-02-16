@@ -60,6 +60,8 @@ export const BatchCard = ({
 
           <h2>{batch.name}</h2>
           <p>
+            ID: {batch.id}
+            <br></br>
             Количество пересечений: {batch.overlaps} <br></br>
             Приоритет: {batch.priority} <br></br>
             Проект находится в статусе "
