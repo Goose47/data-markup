@@ -17,15 +17,21 @@ type Config struct {
 	Env  string `yaml:"env"`
 	Port int    `yaml:"port"`
 	DB   DB     `yaml:"db"`
+	JWT  JWT    `yaml:"jwt"`
 }
 
-// Config represents database configuration.
+// DB represents database configuration.
 type DB struct {
 	User   string `yaml:"user"`
 	Pass   string `yaml:"pass"`
 	DBName string `yaml:"dbname"`
 	Host   string `yaml:"host"`
 	Port   int    `yaml:"port"`
+}
+
+// JWT represents database configuration.
+type JWT struct {
+	Secret string `yaml:"secret"`
 }
 
 // LoadPath loads configuration from specified path and returns config instance and error.

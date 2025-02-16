@@ -11,7 +11,7 @@ type MarkupFieldEntity = { key: string, value: string, type: "text" | "img" | "u
  * keys are parsed by _postfix: _text, _img, _url
  * group is parsed by some_nameN_postfix where 0 <= N <= 9
  */
-const toParsedFields = (data: any, type: BatchType ) => {
+const toParsedFields = (data: any, type: BatchType) => {
     const parseKey = (key: string): {
         key: string;
         type: "text" | "img" | "url";
@@ -20,9 +20,11 @@ const toParsedFields = (data: any, type: BatchType ) => {
         const splitted = key.split("_");
 
         if (splitted.length === 1) {
+            const group = parseInt(splitted.at(-1)?.at(-1) ?? "");
+
             return {
                 key,
-                group: null,
+                group: !isNaN(group) ? group : null,
                 type: "text",
             }
         }
@@ -54,13 +56,14 @@ const toParsedFields = (data: any, type: BatchType ) => {
                 break;
             default:
                 parsed = {
+                    group: !isNaN(parseInt(key.at(-1) ?? "")) ? parseInt(key.at(-1) ?? "") : null,
                     key,
                     type: "text" as const,
                 };
                 break;
         }
 
-        return { ...parsed, group: type === "compare" && !isNaN(group) ? group : null, };
+        return { group: type === "compare" && !isNaN(group) ? group : null, ...parsed,  };
     }
 
     const fields = Object.entries(data).map(([key, value]) => ({
@@ -71,7 +74,7 @@ const toParsedFields = (data: any, type: BatchType ) => {
     return fields;
 }
 
-const MarkupField = ({ field }: { field: MarkupFieldEntity}) => {
+const MarkupField = ({ field }: { field: MarkupFieldEntity }) => {
     let value;
 
     switch (field.type) {
@@ -100,23 +103,28 @@ export const MarkupData = ({ assessment }: { assessment: AssessmentData }) => {
 
     const fields = toParsedFields(data, assessment.batchType);
 
+    const UNGROOUPED = "Ungrouped";
+
     if (assessment.batchType === "compare") {
-        fields.reduce((acc, field) => {
-            const group = acc[field.group ?? 10];
+        const groupedFields = Object.groupBy(fields, (field) => field.group ?? UNGROOUPED);
 
-            if (!group) {
-                acc[field.group ?? 10] = [field];
-            } else {
-                group.push(field);
-            }
-
-            return acc;
-        }, [] as unknown as [MarkupFieldEntity[]]);
+        return (<div className={b("wrapper")}>
+            <Flex gap={8} className={b("compare")}> 
+                {
+                    Object.entries(groupedFields).map(([group, fields]) => {
+                        return <Flex direction={"column"} gap={4}>
+                            <Text variant="header-1">{group}</Text>
+                            {fields?.map((field) => <MarkupField field={field} />)}
+                        </Flex>
+                    })
+                }
+            </Flex>
+        </div>)
     }
 
     return (<div className={b("wrapper")}>
-        <Flex direction={"column"}>
-            {fields.map((field) => <MarkupField field={field}/>)}
+        <Flex direction={"column"} gap={4}>
+            {fields.map((field) => <MarkupField field={field} />)}
         </Flex>
     </div>)
 };

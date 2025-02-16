@@ -1,4 +1,4 @@
-import { Button, Spin, Text } from "@gravity-ui/uikit";
+import { Alert, Button, Flex, Spin } from "@gravity-ui/uikit";
 import { block } from "../../utils/block";
 import { assessmentNext, assessmentUpdate, batchFind } from "../../utils/requests";
 import { AssessmentNext } from "../../utils/types";
@@ -60,11 +60,9 @@ export const Assessment = () => {
                 ? <>
                     {currentAssessment === "loading" && <Spin />}
                     {currentAssessment === "error" && 
-                        <Text variant="body-2" color="danger">
-                            Кончились задания 🤯
-                        </Text>}
+                        <Alert title="Кончились задания 🤯" theme="danger" />}
                 </>
-                : <>
+                : <Flex direction="column" gap={4}>
                     <MarkupData assessment={currentAssessment} /> 
                     <MyMarkupType
                         isAdmin={false}
@@ -80,7 +78,7 @@ export const Assessment = () => {
                     >
                         Отправить
                     </Button>
-                </>
+                </Flex>
         }
     </div>)
 };

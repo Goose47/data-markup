@@ -8,18 +8,28 @@ import (
 )
 
 type User struct {
-	ID          uint   `gorm:"primaryKey"`
-	Email       string `gorm:"unique;not null"`
-	CreatedAt   time.Time
-	Roles       []Role       `gorm:"many2many:user_roles;"`
-	Permissions []Permission `gorm:"many2many:user_permissions;"`
-	Batches     []Batch      `gorm:"many2many:user_batches;"`
-	Assessments []Assessment `gorm:"foreignKey:UserID;references:ID"`
+	ID          uint         `json:"id" gorm:"primaryKey"`
+	Email       string       `json:"email" gorm:"unique;not null"`
+	Password    string       `json:"-" gorm:"not null"`
+	CreatedAt   time.Time    `json:"created_at"`
+	Roles       []Role       `json:"roles" gorm:"many2many:user_roles;"`
+	Permissions []Permission `json:"-" gorm:"many2many:user_permissions;"`
+	Batches     []Batch      `json:"-" gorm:"many2many:user_batches;"`
+	Assessments []Assessment `json:"-" gorm:"foreignKey:UserID;references:ID"`
+}
+
+func (u User) HasRole(roleID uint) bool {
+	for _, role := range u.Roles {
+		if role.ID == roleID {
+			return true
+		}
+	}
+	return false
 }
 
 type Role struct {
-	ID   uint   `gorm:"primaryKey"`
-	Name string `gorm:"unique;not null"`
+	ID   uint   `json:"id" gorm:"primaryKey"`
+	Name string `json:"name" gorm:"unique;not null"`
 	//Users []User `gorm:"many2many:user_roles;"`
 }
 

@@ -10,7 +10,9 @@ import (
 	"io"
 	"log/slog"
 	"markup/internal/domain/enums/markupStatus"
+	"markup/internal/domain/enums/roles"
 	"markup/internal/domain/models"
+	"markup/internal/lib/auth"
 	"markup/internal/lib/responses"
 	"net/http"
 	"strconv"
@@ -56,24 +58,25 @@ func (con *Batch) Index(c *gin.Context) {
 	}
 	offset := (page - 1) * perPage
 
-	//if isAdmin {
-	//	userID = false
-	//} else {
-	//	userID = 1
-	//}
-	isAdmin := true // todo retrieve from authenticated user
-	userID := 2
+	user, err := auth.User(c)
+	if err != nil {
+		responses.UnauthorizedError(c)
+		return
+	}
+	isAdmin := user.HasRole(roles.Admin)
 
 	var total int64
 	tx := con.db.Model(&models.Batch{})
 	if !isAdmin {
-		tx = tx.Where("user_id = ?", userID)
+		tx = tx.Where("user_id = ?", user.ID)
 	}
 	tx.Count(&total)
 
-	tx = con.db.Limit(perPage).Offset(offset)
+	tx = con.db.Limit(perPage).
+		Offset(offset).
+		Order("created_at DESC")
 	if !isAdmin {
-		tx = tx.Where("user_id = ?", userID)
+		tx = tx.Where("user_id = ?", user.ID)
 	}
 	tx.Find(&batches)
 
@@ -147,30 +150,38 @@ func (con *Batch) Store(c *gin.Context) {
 		IsActive:  false,
 	}
 
-	var userID *uint // todo retrieve from authenticated user (if admin then null)
-	var lol uint = 2
-	userID = &lol
+	user, err := auth.User(c)
+	if err != nil {
+		responses.UnauthorizedError(c)
+		return
+	}
 
-	if userID != nil {
-		var user models.User
-		err := con.db.
-			Where("id = ?", userID).
-			First(&user).Error
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				log.Warn("user not found")
-				c.JSON(http.StatusNotFound, gin.H{
-					"error": "user not found",
-				})
-				return
-			}
+	isAdmin := user.HasRole(roles.Admin)
 
-			log.Error("failed to find user", slog.Any("error", err))
-			responses.InternalServerError(c)
-			return
-		}
+	if !isAdmin {
 		batch.Users = append(batch.Users, user)
 	}
+
+	//if userID != nil {
+	//	var user models.User
+	//	err := con.db.
+	//		Where("id = ?", userID).
+	//		First(&user).Error
+	//	if err != nil {
+	//		if errors.Is(err, gorm.ErrRecordNotFound) {
+	//			log.Warn("user not found")
+	//			c.JSON(http.StatusNotFound, gin.H{
+	//				"error": "user not found",
+	//			})
+	//			return
+	//		}
+	//
+	//		log.Error("failed to find user", slog.Any("error", err))
+	//		responses.InternalServerError(c)
+	//		return
+	//	}
+	//	batch.Users = append(batch.Users, user)
+	//}
 
 	if err := tx.Create(&batch).Error; err != nil {
 		tx.Rollback()
@@ -272,6 +283,7 @@ type updateBatchType struct {
 	Overlaps int    `binding:"required" json:"overlaps"`
 	Priority int    `binding:"required,gte=1,lte=10" json:"priority"`
 	TypeID   uint   `binding:"required" json:"type_id"`
+	IsActive bool   `binding:"required" json:"is_active"`
 }
 
 func (con *Batch) Update(c *gin.Context) {
@@ -310,6 +322,7 @@ func (con *Batch) Update(c *gin.Context) {
 	batch.Overlaps = data.Overlaps
 	batch.Priority = data.Priority
 	batch.TypeID = data.TypeID
+	batch.IsActive = data.IsActive
 
 	if err := con.db.Save(&batch).Error; err != nil {
 		log.Error("failed to update batch type", slog.Any("error", err))

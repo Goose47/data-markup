@@ -3,20 +3,25 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"log/slog"
 	"markup/internal/controllers"
 	envpkg "markup/internal/domain/enums/env"
+	"markup/internal/server/middleware"
 )
 
 // NewRouter sets router mode based on env, registers middleware, defines handlers and options and creates new gin router.
 func NewRouter(
 	log *slog.Logger,
 	env string,
+	jwtSecret string,
+	db *gorm.DB,
 	helloCon *controllers.HelloController,
 	markupTypeCon *controllers.MarkupType,
 	batchCon *controllers.Batch,
 	markupCon *controllers.Markup,
 	assessmentCon *controllers.Assessment,
+	authCon *controllers.Auth,
 ) *gin.Engine {
 	var mode string
 	switch env {
@@ -38,9 +43,10 @@ func NewRouter(
 	r.GET("hello", helloCon.Hello)
 	api := r.Group("/api")
 	{
-		v1 := api.Group("/v1")
+		v1protected := api.Group("/v1")
+		v1protected.Use(middleware.AuthMiddleware(db, jwtSecret))
 		{
-			markupTypes := v1.Group("/markupTypes")
+			markupTypes := v1protected.Group("/markupTypes")
 			{
 				markupTypes.GET("", markupTypeCon.Index)
 				markupTypes.GET("/:id", markupTypeCon.Find)
@@ -48,7 +54,7 @@ func NewRouter(
 				markupTypes.PUT("/:id", markupTypeCon.Update)
 				markupTypes.DELETE("/:id", markupTypeCon.Destroy)
 			}
-			batches := v1.Group("/batches")
+			batches := v1protected.Group("/batches")
 			{
 				batches.GET("", batchCon.Index)
 				batches.GET("/:id", batchCon.Find)
@@ -59,12 +65,12 @@ func NewRouter(
 				batches.POST("/:id/markupTypes", batchCon.TieMarkupType)
 				batches.PUT("/:id/toggleActive", batchCon.ToggleIsActive)
 			}
-			markups := v1.Group("/markups")
+			markups := v1protected.Group("/markups")
 			{
 				markups.GET("", markupCon.Index)
 				markups.GET("/:id", markupCon.Find)
 			}
-			assessments := v1.Group("/assessments")
+			assessments := v1protected.Group("/assessments")
 			{
 				assessments.GET("", assessmentCon.Index)
 				assessments.GET("/:id", assessmentCon.Find)
@@ -73,6 +79,20 @@ func NewRouter(
 				assessments.DELETE("/:id", assessmentCon.Destroy)
 
 				assessments.POST("/next", assessmentCon.Next)
+			}
+			auth := v1protected.Group("/auth")
+			{
+				auth.POST("refresh", authCon.Refresh)
+				auth.GET("me", authCon.Me)
+			}
+		}
+
+		v1public := api.Group("/v1")
+		{
+			auth := v1public.Group("/auth")
+			{
+				auth.POST("register", authCon.Register)
+				auth.POST("login", authCon.Login)
 			}
 		}
 	}
