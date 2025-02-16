@@ -11,7 +11,6 @@ import (
 	"log/slog"
 	"markup/internal/domain/enums/markupStatus"
 	"markup/internal/domain/models"
-	"markup/internal/lib/auth"
 	"markup/internal/lib/responses"
 	"net/http"
 	"strconv"
@@ -117,12 +116,6 @@ type storeBatchType struct {
 func (con *Batch) Store(c *gin.Context) {
 	const op = "BatchController.Store"
 	log := con.log.With(slog.String("op", op))
-
-	user, err := auth.User(c)
-	if err != nil {
-		responses.UnauthorizedError(c)
-		return
-	}
 
 	var data storeBatchType
 
