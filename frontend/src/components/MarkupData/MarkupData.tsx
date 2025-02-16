@@ -92,10 +92,11 @@ const MarkupField = ({ field }: { field: MarkupFieldEntity }) => {
             break;
     }
 
-    return <Flex gap={4} justifyContent={"space-between"}>
-        <Text variant="header-1">{field.key}</Text>
-        {value}
-    </Flex>
+    return value;
+    // <Flex gap={4} justifyContent={"space-between"}>
+    //     <Text variant="header-1">{field.key}</Text>
+    //     {value}
+    // </Flex>
 }
 
 export const MarkupData = ({ assessment }: { assessment: AssessmentData }) => {
@@ -108,13 +109,27 @@ export const MarkupData = ({ assessment }: { assessment: AssessmentData }) => {
     if (assessment.batchType === "compare") {
         const groupedFields = Object.groupBy(fields, (field) => field.group ?? UNGROOUPED);
 
+        const ungrouped = groupedFields[UNGROOUPED] ?? [];
+
+        delete groupedFields[UNGROOUPED];
+
         return (<div className={b("wrapper")}>
             <Flex gap={8} className={b("compare")}> 
+                {
+                    groupedFields[UNGROOUPED]?.map(field => <Text variant="header-1">{field.key}</Text>)
+                }
                 {
                     Object.entries(groupedFields).map(([group, fields]) => {
                         return <Flex direction={"column"} gap={4}>
                             <Text variant="header-1">{group}</Text>
-                            {fields?.map((field) => <MarkupField field={field} />)}
+                            <Flex gap={4}>    
+                                {ungrouped.map((field) => <MarkupField field={field} />)}
+                            </Flex>
+                            <Flex gap={4}>
+                                <Text>
+                                    {fields?.map((field) => <MarkupField field={field} />)}
+                                </Text>
+                            </Flex>
                         </Flex>
                     })
                 }
