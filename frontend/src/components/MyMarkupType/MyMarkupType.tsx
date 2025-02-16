@@ -126,6 +126,7 @@ export const MyMarkupType = ({
                   ([_, markupItems], index) => {
                     return (
                       <MarkupTypeGroup
+                        key={index}
                         value={values[index]}
                         onUpdate={(v) => handleUpdateValues(index, v)}
                         fields={markupItems}

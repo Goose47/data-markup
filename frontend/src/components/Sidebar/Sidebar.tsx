@@ -1,4 +1,4 @@
-import { Button, Switch, User } from "@gravity-ui/uikit";
+import { Button, User } from "@gravity-ui/uikit";
 import { block } from "../../utils/block";
 
 import "./Sidebar.scss";
@@ -40,7 +40,6 @@ export const Sidebar = () => {
           size="l"
         />
       </div>
-      <Switch />
       <div className={b("button")}>
         <Button view="action">Выйти из аккаунта</Button>
       </div>
