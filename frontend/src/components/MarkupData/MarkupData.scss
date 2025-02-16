@@ -1,0 +1,9 @@
+@use '../../variables.scss';
+$block: '.#{variables.$ns}markup-data';
+
+#{$block} {
+    &__image {
+        max-width: 300px;
+        height: auto;
+    }
+}

@@ -20,6 +20,7 @@
       "incremental": true,
       "allowSyntheticDefaultImports": true,
       "noUnusedLocals": false,
+      "noUnusedParameters": false
     },
     "include": [
       "**/*.ts",

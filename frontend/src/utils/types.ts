@@ -41,6 +41,8 @@ export type BatchCardType = {
 
 export type AssessmentNext = {
   assessment_id: number;
+  /** assume it's a valid JSON */
+  data: string;
   markup_type: MarkupType;
 };
 
