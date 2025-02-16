@@ -1,5 +1,10 @@
 import axios from "axios";
-import { AssessmentUpdateRq, BatchRq, MarkupTypeRq } from "./types";
+import {
+  AssessmentUpdateRq,
+  BatchCardType,
+  BatchRq,
+  MarkupTypeRq,
+} from "./types";
 
 const API_PREFIX = "https://api.rwfshr.ru";
 
@@ -69,6 +74,14 @@ export const linkBatchToMarkupType = async (
 export const getAvailableBatches = async () => {
   return await axios.get(API_PREFIX + "/api/v1/batches").then((response) => {
     return response.data.data;
+  });
+};
+
+export const batchUpdate = async (batch: BatchCardType) => {
+  return await axios.put(API_PREFIX + "/api/v1/batches/" + batch.id, {
+    ...batch,
+    id: undefined,
+    created_at: undefined,
   });
 };
 

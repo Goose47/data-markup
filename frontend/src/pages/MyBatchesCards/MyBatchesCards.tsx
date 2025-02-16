@@ -8,8 +8,16 @@ import { getAvailableBatches } from "../../utils/requests";
 
 const b = block("my-batches-cards");
 
+const _ = require("lodash");
+
 export const MyBatchesCards = () => {
   const [batches, setBatches] = useState<BatchCardType[]>([]);
+
+  const handleUpdateBatch = (index: number, batch: BatchCardType) => {
+    const batchesCopy = _.cloneDeep(batches);
+    batchesCopy[index] = batch;
+    setBatches(batchesCopy);
+  };
 
   const [rerenderState, setRerenderState] = useState(1);
   useEffect(() => {
@@ -28,9 +36,12 @@ export const MyBatchesCards = () => {
       </p>
 
       <div className={b("list")}>
-        {batches.map((batch) => (
+        {batches.map((batch, index) => (
           <BatchCard
             batch={batch}
+            handleUpdateBatch={(batch: BatchCardType) => {
+              handleUpdateBatch(index, batch);
+            }}
             triggerRerender={() => setRerenderState((v) => v + 1)}
           />
         ))}
