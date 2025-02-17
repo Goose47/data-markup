@@ -665,7 +665,7 @@ func (con *Batch) Export(c *gin.Context) {
 	zipFilename := "archive_" + time.Now().Format("20060102_150405") + ".zip"
 	c.Header("Content-Disposition", "attachment; filename="+zipFilename)
 	c.Header("Content-Type", "application/zip")
-	c.Header("Content-Length", fmt.Sprintf("%s", buf.Len()))
+	c.Header("Content-Length", fmt.Sprintf("%d", buf.Len()))
 
 	// Отправляем ZIP-файл в ответе
 	c.Data(http.StatusOK, "application/zip", buf.Bytes())
