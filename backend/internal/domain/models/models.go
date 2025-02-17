@@ -71,13 +71,14 @@ type Markup struct {
 }
 
 type MarkupType struct {
-	ID      uint              `gorm:"primaryKey" json:"id"`
-	BatchID *uint             `gorm:"null" json:"batch_id"`
-	Name    string            `gorm:"not null" json:"name"`
-	ChildID *uint             `gorm:"null" json:"child_id"`
-	UserID  *uint             `gorm:"null" json:"user_id"`
-	Fields  []MarkupTypeField `gorm:"foreignKey:MarkupTypeID;references:ID;onDelete:CASCADE" json:"fields"`
-	Batch   Batch             `gorm:"foreignKey:BatchID;references:ID" json:"-"`
+	ID        uint              `gorm:"primaryKey" json:"id"`
+	BatchID   *uint             `gorm:"null" json:"batch_id"`
+	Name      string            `gorm:"not null" json:"name"`
+	ChildID   *uint             `gorm:"null" json:"child_id"`
+	UserID    *uint             `gorm:"null" json:"user_id"`
+	CreatedAt time.Time         `json:"created_at"`
+	Fields    []MarkupTypeField `gorm:"foreignKey:MarkupTypeID;references:ID;onDelete:CASCADE" json:"fields"`
+	Batch     Batch             `gorm:"foreignKey:BatchID;references:ID" json:"-"`
 }
 
 type MarkupTypeField struct {

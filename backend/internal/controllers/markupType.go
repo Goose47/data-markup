@@ -10,6 +10,7 @@ import (
 	"markup/internal/lib/responses"
 	"markup/internal/lib/validation/query"
 	"net/http"
+	"time"
 )
 
 type MarkupType struct {
@@ -136,8 +137,9 @@ func (con *MarkupType) Store(c *gin.Context) {
 	}
 
 	markupType := models.MarkupType{
-		Name:   data.Name,
-		UserID: &user.ID,
+		Name:      data.Name,
+		UserID:    &user.ID,
+		CreatedAt: time.Now(),
 	}
 
 	// todo: make only one query to save all models. See Assesment.Store

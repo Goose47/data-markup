@@ -454,9 +454,10 @@ func (con *Batch) TieMarkupType(c *gin.Context) {
 	}
 
 	markupType.BatchID = &data.BatchID
+	markupType.CreatedAt = time.Now()
 	if err := tx.Save(&markupType).Error; err != nil {
 		tx.Rollback()
-		log.Error("failed to update markup type field", slog.Any("error", err))
+		log.Error("failed to save markup type", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
