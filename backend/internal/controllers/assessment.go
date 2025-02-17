@@ -244,11 +244,12 @@ func (con *Assessment) Next(c *gin.Context) {
 	err = con.db.
 		Table("markups").
 		Select("markups.id, COUNT(assessments.id), batches.overlaps, markups.status_id").
-		Where("status_id = ? and batches.is_active IS TRUE", markupStatus.Pending).
 		Joins("JOIN batches ON markups.batch_id = batches.id").
 		Joins("LEFT JOIN assessments ON assessments.markup_id = markups.id").
+		Where("status_id = ? and batches.is_active IS TRUE", markupStatus.Pending).
 		Group("markups.id, markups.status_id, batches.overlaps").
 		Having("COUNT(assessments.id) < batches.overlaps").
+		Having("NOT EXISTS (SELECT 1 FROM assessments a WHERE a.markup_id = markups.id AND a.user_id = ?)", user.ID).
 		First(&res).Error
 
 	if err != nil {
