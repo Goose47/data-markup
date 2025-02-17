@@ -632,13 +632,19 @@ func (con *Batch) Export(c *gin.Context) {
 
 			//if assessment has asssessmentField corresponding to markupTypeField, write "+"
 		loop:
-			for range markupTypeFieldIDs {
-				for _, assessmentField := range markup.Assessments[0].Fields {
-					if slices.Contains(markupTypeFieldIDs, assessmentField.MarkupTypeFieldID) {
-						nextRow = append(nextRow, "+")
-						continue loop
-					}
+			for _, nextMTFID := range markupTypeFieldIDs {
+				if slices.ContainsFunc(markup.Assessments[0].Fields, func(n models.AssessmentField) bool {
+					return n.MarkupTypeFieldID == nextMTFID
+				}) {
+					nextRow = append(nextRow, "+")
+					continue loop
 				}
+				//for _, assessmentField := range markup.Assessments[0].Fields {
+				//	if slices.Contains(markupTypeFieldIDs, assessmentField.MarkupTypeFieldID) {
+				//		nextRow = append(nextRow, "+")
+				//		continue loop
+				//	}
+				//}
 				nextRow = append(nextRow, "-")
 			}
 
