@@ -65,6 +65,8 @@ func NewRouter(
 
 				batches.POST("/:id/markupTypes", batchCon.TieMarkupType)
 				batches.PUT("/:id/toggleActive", batchCon.ToggleIsActive)
+
+				batches.GET("/:id/export", batchCon.Export)
 			}
 			markups := v1protected.Group("/markups")
 			{
