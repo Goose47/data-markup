@@ -31,6 +31,11 @@ func NewAssessment(
 	}
 }
 
+type assessmentsResponse struct {
+	models.Assessment
+	models.MarkupType
+}
+
 func (con *Assessment) Index(c *gin.Context) {
 	const op = "AssessmentController.Index"
 	log := con.log.With(slog.String("op", op))
@@ -68,7 +73,11 @@ func (con *Assessment) Index(c *gin.Context) {
 	}
 	tx.Count(&total)
 
-	tx = con.db.Limit(perPage).Offset(offset)
+	tx = con.db.Limit(perPage).
+		Offset(offset).
+		Preload("Fields").
+		Preload("User").
+		Preload("Markup.Batch.MarkupTypes")
 	if userID > 0 {
 		tx = tx.Where("user_id = ?", userID)
 	}
@@ -77,7 +86,24 @@ func (con *Assessment) Index(c *gin.Context) {
 	}
 	tx.Find(&assessments)
 
-	c.JSON(http.StatusOK, responses.Pagination(assessments, total, page, perPage))
+	resp := make([]assessmentsResponse, len(assessments))
+	for i, assessment := range assessments {
+		// search for markup type that corresponds with each assessment.
+		var respectiveMarkupType models.MarkupType
+		for _, mt := range assessment.Markup.Batch.MarkupTypes {
+			if mt.ChildID == nil {
+				respectiveMarkupType = mt
+				break
+			}
+		}
+
+		resp[i] = assessmentsResponse{
+			assessment,
+			respectiveMarkupType,
+		}
+	}
+
+	c.JSON(http.StatusOK, responses.Pagination(resp, total, page, perPage))
 }
 
 func (con *Assessment) Find(c *gin.Context) {
