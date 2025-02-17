@@ -57,16 +57,37 @@ func (con *MarkupType) Index(c *gin.Context) {
 	}
 	tx.Count(&total)
 
-	var markups []models.MarkupType
-	tx = con.db.Limit(perPage).Offset(offset)
+	var markups []struct {
+		models.MarkupType
+		MarkupCount            int `json:"markup_count"`
+		AssessmentCount        int `json:"assessment_count"`
+		CorrectAssessmentCount int `json:"correct_assessment_count"`
+	}
+	tx = con.db.
+		Table("markup_types mt").
+		Select("mt.id,mt.batch_id,mt.name,mt.child_id,mt.user_id,mt.created_at,COUNT(DISTINCT a.markup_id) AS markup_count, COUNT(DISTINCT a.id) AS assessment_count,COUNT(DISTINCT a2.id) AS correct_assessment_count").
+		Joins("LEFT JOIN markup_type_fields mtf ON mt.id = mtf.markup_type_id").
+		Joins("LEFT JOIN assessment_fields af ON af.markup_type_field_id = mtf.id").
+		Joins("LEFT JOIN assessments a ON af.assessment_id = a.id").
+		Joins("LEFT JOIN markups m ON a.markup_id = m.id").
+		Joins("LEFT JOIN assessments a2 ON af.assessment_id = a2.id and a2.hash = m.correct_assessment_hash").
+		Group("mt.id").
+		Limit(perPage).
+		Offset(offset)
 	if batchID != nil {
 		if *batchID > 0 {
-			tx = tx.Where("batch_id = ?", batchID)
+			tx = tx.Where("mt.batch_id = ?", batchID)
 		} else {
-			tx = tx.Where("batch_id IS NULL")
+			tx = tx.Where("mt.batch_id IS NULL")
 		}
 	}
 	tx.Find(&markups)
+
+	if err := tx.Error; err != nil {
+		log.Error("failed to query markup_types", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
 
 	c.JSON(http.StatusOK, responses.Pagination(markups, total, page, perPage))
 }
