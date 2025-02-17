@@ -22,6 +22,7 @@ func NewRouter(
 	markupCon *controllers.Markup,
 	assessmentCon *controllers.Assessment,
 	authCon *controllers.Auth,
+	profileCon *controllers.Profile,
 ) *gin.Engine {
 	var mode string
 	switch env {
@@ -84,6 +85,11 @@ func NewRouter(
 			{
 				auth.POST("refresh", authCon.Refresh)
 				auth.GET("me", authCon.Me)
+			}
+			profile := v1protected.Group("/profiles")
+			{
+				profile.GET("/me", profileCon.Me)
+				profile.GET("", profileCon.Index)
 			}
 		}
 

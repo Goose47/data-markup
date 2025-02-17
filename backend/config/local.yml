@@ -5,6 +5,6 @@ jwt:
 db:
   user: "root"
   pass: "root"
-  dbname: "markups"
+  dbname: "markup"
   host: "localhost"
   port: 3306
