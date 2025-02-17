@@ -91,6 +91,8 @@ func (con *Batch) Find(c *gin.Context) {
 
 	var batch models.Batch
 	err := con.db.
+		Table("batches b").
+		Select("b.id,b.name,b.overlaps,b.priority,b.created_at,b.is_active,b.type_id").
 		Where("id = ?", id).
 		First(&batch).Error
 
@@ -106,7 +108,49 @@ func (con *Batch) Find(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, batch)
+	var markupCount int64
+	con.db.
+		Model(models.Markup{}).
+		Where("batch_id = ?", batch.ID).
+		Count(&markupCount)
+
+	var processedMarkupCount int64
+	con.db.
+		Model(models.Markup{}).
+		Where("batch_id = ? AND status_id = ?", batch.ID, markupStatus.Processed).
+		Count(&processedMarkupCount)
+
+	var assessmentCount int64
+	con.db.
+		Table("assessments a").
+		Select("DISTINCT a.id").
+		Joins("JOIN markups m ON a.markup_id = m.id").
+		Where("m.batch_id = ?", batch.ID).
+		Count(&assessmentCount)
+
+	var correctAssessmentCount int64
+	con.db.
+		Table("assessments a").
+		Select("DISTINCT a.id").
+		Joins("JOIN markups m ON a.markup_id = m.id AND a.hash = m.correct_assessment_hash").
+		Where("m.batch_id = ?", batch.ID).
+		Count(&correctAssessmentCount)
+
+	var res struct {
+		models.Batch
+		MarkupCount            int64 `json:"markup_count"`
+		ProcessedMarkupCount   int64 `json:"processed_markup_count"`
+		AssessmentCount        int64 `json:"assessment_count"`
+		CorrectAssessmentCount int64 `json:"correct_assessment_count"`
+	}
+
+	res.Batch = batch
+	res.MarkupCount = markupCount
+	res.ProcessedMarkupCount = processedMarkupCount
+	res.AssessmentCount = assessmentCount
+	res.CorrectAssessmentCount = correctAssessmentCount
+
+	c.JSON(http.StatusOK, res)
 }
 
 type storeBatchType struct {
