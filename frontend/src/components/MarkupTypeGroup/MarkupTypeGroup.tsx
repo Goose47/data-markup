@@ -45,7 +45,7 @@ export const MarkupTypeGroup = ({
                 },
               ]);
             }}
-            checked={value[0].value === String(field.id)}
+            checked={value[0]?.value === String(field.id)}
           />
         ))}
       </div>
@@ -155,7 +155,7 @@ export const MarkupTypeGroup = ({
           {fields[0].label}
         </label>
         <TextInput
-          value={value[0].value}
+          value={value[0]?.value}
           onUpdate={(v) => {
             onUpdate([
               {

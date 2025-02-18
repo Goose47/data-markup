@@ -24,6 +24,7 @@ export const BatchMarkup = () => {
   const params = useParams();
 
   const [state, setState] = useState({ page: 1, pageSize: 5 });
+  const navigate = useNavigate();
 
   const [batch, setBatch] = useState<BatchMarkupType>();
   const [data, setData] = useState<BatchMarkupType[]>([]);
@@ -32,19 +33,24 @@ export const BatchMarkup = () => {
   const handleUpdate: PaginationProps["onUpdate"] = (page, pageSize) =>
     setState((prevState) => ({ ...prevState, page, pageSize }));
 
+  const batchId = parseInt(params.batchId ?? "0");
+
   useEffect(() => {
-    getLinkedMarkupsToBatch(
-      parseInt(params.batchId ?? "0"),
-      state.page,
-      state.pageSize
-    ).then((data: { data: BatchMarkupType[]; pages_total: number }) => {
-      setData(data.data);
-      setTotalPages(data.pages_total);
-    });
+    if (isNaN(batchId)) {
+      navigate("/");
+      return;
+    }
+
+    getLinkedMarkupsToBatch(batchId, state.page, state.pageSize).then(
+      (data: { data: BatchMarkupType[]; pages_total: number }) => {
+        setData(data.data);
+        setTotalPages(data.pages_total);
+      }
+    );
     batchFind(parseInt(params.batchId ?? "0")).then((data: BatchMarkupType) => {
       setBatch(data);
     });
-  }, [params.batchId, state.page, state.pageSize]);
+  }, [batchId, navigate, params.batchId, state.page, state.pageSize]);
 
   const pagination = (
     <Pagination
@@ -58,8 +64,6 @@ export const BatchMarkup = () => {
   const parsedJson = data.map((markup: BatchMarkupType) =>
     JSON.parse(markup.data)
   );
-
-  const navigate = useNavigate();
 
   return (
     <div className={b()}>

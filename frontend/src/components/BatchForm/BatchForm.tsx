@@ -187,12 +187,13 @@ export const BatchForm = ({
             <label htmlFor="overlaps">
               Выберите тип разметки (ответы, предоставляемые для ассессоров)
               <br></br>Добавить свой тип разметки можно на{" "}
-              <Link to="markup/create">этой странице</Link>
+              <Link to="/markup/create" target="_blank">этой странице</Link>
             </label>
             <Select
               onUpdate={(value) => setSelectedType(value[0])}
               value={[selectedType]}
               width={"max"}
+              onFocus={() => getAvailableMarkupTypes().then(setTypes)}
             >
               {types.map((type) => {
                 return (

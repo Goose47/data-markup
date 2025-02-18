@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"archive/zip"
+	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -15,6 +17,7 @@ import (
 	"markup/internal/lib/auth"
 	"markup/internal/lib/responses"
 	"net/http"
+	"slices"
 	"strconv"
 	"time"
 )
@@ -91,6 +94,8 @@ func (con *Batch) Find(c *gin.Context) {
 
 	var batch models.Batch
 	err := con.db.
+		Table("batches b").
+		Select("b.id,b.name,b.overlaps,b.priority,b.created_at,b.is_active,b.type_id").
 		Where("id = ?", id).
 		First(&batch).Error
 
@@ -106,7 +111,49 @@ func (con *Batch) Find(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, batch)
+	var markupCount int64
+	con.db.
+		Model(models.Markup{}).
+		Where("batch_id = ?", batch.ID).
+		Count(&markupCount)
+
+	var processedMarkupCount int64
+	con.db.
+		Model(models.Markup{}).
+		Where("batch_id = ? AND status_id = ?", batch.ID, markupStatus.Processed).
+		Count(&processedMarkupCount)
+
+	var assessmentCount int64
+	con.db.
+		Table("assessments a").
+		Select("DISTINCT a.id").
+		Joins("JOIN markups m ON a.markup_id = m.id").
+		Where("m.batch_id = ? AND a.hash IS NOT NULL", batch.ID).
+		Count(&assessmentCount)
+
+	var correctAssessmentCount int64
+	con.db.
+		Table("assessments a").
+		Select("DISTINCT a.id").
+		Joins("JOIN markups m ON a.markup_id = m.id AND a.hash = m.correct_assessment_hash").
+		Where("m.batch_id = ? AND a.hash IS NOT NULL", batch.ID).
+		Count(&correctAssessmentCount)
+
+	var res struct {
+		models.Batch
+		MarkupCount            int64 `json:"markup_count"`
+		ProcessedMarkupCount   int64 `json:"processed_markup_count"`
+		AssessmentCount        int64 `json:"assessment_count"`
+		CorrectAssessmentCount int64 `json:"correct_assessment_count"`
+	}
+
+	res.Batch = batch
+	res.MarkupCount = markupCount
+	res.ProcessedMarkupCount = processedMarkupCount
+	res.AssessmentCount = assessmentCount
+	res.CorrectAssessmentCount = correctAssessmentCount
+
+	c.JSON(http.StatusOK, res)
 }
 
 type storeBatchType struct {
@@ -283,7 +330,7 @@ type updateBatchType struct {
 	Overlaps int    `binding:"required" json:"overlaps"`
 	Priority int    `binding:"required,gte=1,lte=10" json:"priority"`
 	TypeID   uint   `binding:"required" json:"type_id"`
-	IsActive bool   `binding:"required" json:"is_active"`
+	IsActive *bool  `binding:"required" json:"is_active"`
 }
 
 func (con *Batch) Update(c *gin.Context) {
@@ -322,7 +369,7 @@ func (con *Batch) Update(c *gin.Context) {
 	batch.Overlaps = data.Overlaps
 	batch.Priority = data.Priority
 	batch.TypeID = data.TypeID
-	batch.IsActive = data.IsActive
+	batch.IsActive = *data.IsActive
 
 	if err := con.db.Save(&batch).Error; err != nil {
 		log.Error("failed to update batch type", slog.Any("error", err))
@@ -454,9 +501,10 @@ func (con *Batch) TieMarkupType(c *gin.Context) {
 	}
 
 	markupType.BatchID = &data.BatchID
+	markupType.CreatedAt = time.Now()
 	if err := tx.Save(&markupType).Error; err != nil {
 		tx.Rollback()
-		log.Error("failed to update markup type field", slog.Any("error", err))
+		log.Error("failed to save markup type", slog.Any("error", err))
 		responses.InternalServerError(c)
 		return
 	}
@@ -498,4 +546,151 @@ func (con *Batch) TieMarkupType(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, "OK")
+}
+
+func (con *Batch) Export(c *gin.Context) {
+	const op = "BatchController.Export"
+	id := c.Param("id")
+	log := con.log.With(slog.String("op", op), slog.String("id", id))
+
+	var batch models.Batch
+	err := con.db.
+		Where("id = ?", id).
+		Preload("MarkupTypes.Fields").
+		First(&batch).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Warn("batch not found")
+			responses.NotFoundError(c)
+			return
+		}
+
+		log.Error("failed to find batch", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+
+	var buf bytes.Buffer
+	zipWriter := zip.NewWriter(&buf)
+
+	for _, mt := range batch.MarkupTypes {
+		// find markups, corresponding to current markupType
+		var markups []models.Markup
+		err := con.db.
+			Select("DISTINCT m.*").
+			Table("markups m").
+			Joins("LEFT JOIN assessments a ON a.markup_id = m.id AND a.hash = m.correct_assessment_hash").
+			Joins("LEFT JOIN assessment_fields af ON af.assessment_id = a.id").
+			Joins("LEFT JOIN markup_type_fields mtf ON af.markup_type_field_id = mtf.id").
+			Where("mtf.markup_type_id = ? AND m.status_id = ?", mt.ID, markupStatus.Processed).
+			Preload("Assessments.Fields").
+			Find(&markups).Error
+		if err != nil {
+			log.Error("failed to find markups", slog.Any("error", err))
+			responses.InternalServerError(c)
+			return
+		}
+
+		if len(markups) == 0 {
+			continue
+		}
+
+		// csv file column names
+		csvHeaders := make([]string, len(mt.Fields)+1)
+		csvHeaders[0] = "markup_data"
+
+		// markupTypeField ids for corresponding column name in csv column
+		markupTypeFieldIDs := make([]uint, len(mt.Fields))
+
+		// fill csv column names
+		for i, field := range mt.Fields {
+			var label string
+			if field.Label != nil {
+				label = *field.Label
+			}
+			var name string
+			if field.Label != nil {
+				name = *field.Name
+			}
+			csvHeaders[i+1] = fmt.Sprintf("%d.%s.%s", field.GroupID, label, name)
+			markupTypeFieldIDs[i] = field.ID
+		}
+
+		// create csv data
+		csvData := make([][]string, 0, len(markups)+1)
+		csvData = append(csvData, csvHeaders)
+
+		for _, markup := range markups {
+			if len(markup.Assessments) == 0 {
+				log.Warn("markup is empty", slog.Int("markup_id", int(markup.ID)))
+				continue
+			}
+
+			nextRow := make([]string, 0, len(csvHeaders))
+			nextRow = append(nextRow, markup.Data)
+
+			//if assessment has asssessmentField corresponding to markupTypeField, write "+"
+		loop:
+			for _, nextMTFID := range markupTypeFieldIDs {
+				if slices.ContainsFunc(markup.Assessments[0].Fields, func(n models.AssessmentField) bool {
+					return n.MarkupTypeFieldID == nextMTFID
+				}) {
+					nextRow = append(nextRow, "+")
+					continue loop
+				}
+				nextRow = append(nextRow, "-")
+			}
+
+			csvData = append(csvData, nextRow)
+		}
+
+		filename := fmt.Sprintf("%d-%s-%s.csv", mt.ID, mt.Name, mt.CreatedAt.Format("2006-01-02"))
+
+		if err := generateCSV(zipWriter, filename, csvData); err != nil {
+			log.Error("Error creating ZIP", slog.Any("error", err))
+			responses.InternalServerError(c)
+			return
+		}
+	}
+
+	// Закрываем архив
+	if err := zipWriter.Close(); err != nil {
+		log.Error("Error finalizing ZIP", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+
+	// Устанавливаем заголовки для скачивания
+	zipFilename := "archive_" + time.Now().Format("20060102_150405") + ".zip"
+	c.Header("Content-Disposition", "attachment; filename="+zipFilename)
+	c.Header("Content-Type", "application/zip")
+	c.Header("Content-Length", fmt.Sprintf("%d", buf.Len()))
+
+	// Отправляем ZIP-файл в ответе
+	c.Data(http.StatusOK, "application/zip", buf.Bytes())
+
+	c.JSON(http.StatusOK, "OK")
+}
+
+// generateCSV создает CSV-файл и записывает его в переданный *zip.Writer
+func generateCSV(zipWriter *zip.Writer, filename string, data [][]string) error {
+	// Создаем файл внутри архива
+	fileWriter, err := zipWriter.Create(filename)
+	if err != nil {
+		return err
+	}
+
+	// Создаем CSV writer
+	csvWriter := csv.NewWriter(fileWriter)
+	defer csvWriter.Flush()
+
+	// Записываем данные
+	for _, row := range data {
+		if err := csvWriter.Write(row); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -50,6 +50,7 @@ func New(
 	markupCon := controllers.NewMarkup(log, db)
 	assessmentCon := controllers.NewAssessment(log, db)
 	authCon := controllers.NewAuth(log, db, jwtConfig.Secret)
+	profileCon := controllers.NewProfile(log, db)
 
 	router := server.NewRouter(
 		log,
@@ -62,6 +63,7 @@ func New(
 		markupCon,
 		assessmentCon,
 		authCon,
+		profileCon,
 	)
 	serverApp := serverapp.New(log, port, router)
 

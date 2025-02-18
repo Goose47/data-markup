@@ -17,6 +17,7 @@ import {
   MyMarkupType,
 } from "../../components/MyMarkupType/MyMarkupType";
 import { MarkupData } from "../../components/MarkupData/MarkupData";
+import { toaster } from "@gravity-ui/uikit/toaster-singleton";
 
 const b = block("assessment");
 
@@ -152,6 +153,11 @@ export const Assessment = ({
                   valueToFields(currentValue)
                 );
               }
+              toaster.add({
+                name: "Отправлено",
+                content: "+0.03 ₽",
+                theme: "success",
+              });
               setCurrentAssessment(null);
             }}
           >

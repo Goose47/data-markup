@@ -31,6 +31,12 @@ func NewAssessment(
 	}
 }
 
+type assessmentsResponse struct {
+	models.Assessment
+	MarkupType models.MarkupType `json:"markup_type"`
+	User       models.User       `json:"user"`
+}
+
 func (con *Assessment) Index(c *gin.Context) {
 	const op = "AssessmentController.Index"
 	log := con.log.With(slog.String("op", op))
@@ -68,7 +74,11 @@ func (con *Assessment) Index(c *gin.Context) {
 	}
 	tx.Count(&total)
 
-	tx = con.db.Limit(perPage).Offset(offset)
+	tx = con.db.Limit(perPage).
+		Offset(offset).
+		Preload("Fields.MarkupTypeField").
+		Preload("User").
+		Preload("Markup.Batch.MarkupTypes.Fields")
 	if userID > 0 {
 		tx = tx.Where("user_id = ?", userID)
 	}
@@ -77,7 +87,25 @@ func (con *Assessment) Index(c *gin.Context) {
 	}
 	tx.Find(&assessments)
 
-	c.JSON(http.StatusOK, responses.Pagination(assessments, total, page, perPage))
+	resp := make([]assessmentsResponse, len(assessments))
+	for i, assessment := range assessments {
+		// search for markup type that corresponds with each assessment.
+		var respectiveMarkupType models.MarkupType
+		for _, mt := range assessment.Markup.Batch.MarkupTypes {
+			if mt.ChildID == nil {
+				respectiveMarkupType = mt
+				break
+			}
+		}
+
+		resp[i] = assessmentsResponse{
+			assessment,
+			respectiveMarkupType,
+			assessment.User,
+		}
+	}
+
+	c.JSON(http.StatusOK, responses.Pagination(resp, total, page, perPage))
 }
 
 func (con *Assessment) Find(c *gin.Context) {
@@ -167,6 +195,15 @@ func (con *Assessment) Store(c *gin.Context) {
 		return
 	}
 
+	// Delete admin assessment.
+	if err := tx.
+		Where("markup_id = ? AND is_prior IS TRUE", assessment.MarkupID).
+		Delete(models.Assessment{}).Error; err != nil {
+		tx.Rollback()
+		log.Error("failed to delete other admins' assessments", slog.Any("error", err))
+		responses.InternalServerError(c)
+	}
+
 	// Save assessment.
 	if err := tx.Create(&assessment).Error; err != nil {
 		tx.Rollback()
@@ -244,11 +281,12 @@ func (con *Assessment) Next(c *gin.Context) {
 	err = con.db.
 		Table("markups").
 		Select("markups.id, COUNT(assessments.id), batches.overlaps, markups.status_id").
-		Where("status_id = ? and batches.is_active IS TRUE", markupStatus.Pending).
 		Joins("JOIN batches ON markups.batch_id = batches.id").
 		Joins("LEFT JOIN assessments ON assessments.markup_id = markups.id").
+		Where("status_id = ? and batches.is_active IS TRUE", markupStatus.Pending).
 		Group("markups.id, markups.status_id, batches.overlaps").
 		Having("COUNT(assessments.id) < batches.overlaps").
+		Having("NOT EXISTS (SELECT 1 FROM assessments a WHERE a.markup_id = markups.id AND a.user_id = ?)", user.ID).
 		First(&res).Error
 
 	if err != nil {
