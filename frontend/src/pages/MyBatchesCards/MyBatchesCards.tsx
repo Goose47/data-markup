@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { block } from "../../utils/block";
 import "./MyBatchesCards.scss";
 import { CircleInfoFill } from "@gravity-ui/icons";
 import { BatchCard } from "../../components/BatchCard/BatchCard";
 import { BatchCardType } from "../../utils/types";
 import { getAvailableBatches } from "../../utils/requests";
+import { LoginContext } from "../Login/LoginContext";
+import { Loader } from "@gravity-ui/uikit";
 
 const b = block("my-batches-cards");
 
@@ -26,6 +28,29 @@ export const MyBatchesCards = () => {
     });
   }, [rerenderState]);
 
+  const loginContext = useContext(LoginContext);
+  if (loginContext.loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: 500,
+        }}
+      >
+        <Loader></Loader>
+      </div>
+    );
+  }
+  if (loginContext.userRole !== "admin") {
+    return (
+      <div className={b()}>
+        <h1>Отказано в доступе</h1>
+      </div>
+    );
+  }
+
   return (
     <div className={b()}>
       <h1>Существующие проекты (batch'и)</h1>
@@ -36,7 +61,7 @@ export const MyBatchesCards = () => {
       </p>
 
       <div className={b("list")}>
-        {batches.map((batch, index) => (
+        {batches?.map((batch, index) => (
           <BatchCard
             batch={batch}
             handleUpdateBatch={(batch: BatchCardType) => {

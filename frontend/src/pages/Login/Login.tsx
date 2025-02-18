@@ -1,15 +1,18 @@
 import { Button, TextInput } from "@gravity-ui/uikit";
 import { block } from "../../utils/block";
 import "./Login.scss";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { handleLogin } from "../../utils/requests";
 import { toaster } from "@gravity-ui/uikit/toaster-singleton";
 import { sleep } from "../../utils/utils";
 import { useNavigate } from "react-router";
+import { LoginContext } from "./LoginContext";
 
 const b = block("login");
 
 export const Login = () => {
+  const loginContext = useContext(LoginContext);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -17,15 +20,17 @@ export const Login = () => {
 
   const handleSubmit = () => {
     handleLogin(email, password).then(async (response) => {
-      localStorage.setItem("token", response.token);
-      toaster.add({
-        title: "Действие выполнено успешно!",
-        name: "Вы успешно авторизовались",
-        content: "Вы успешно авторизовались",
-        theme: "success",
-      });
-      await sleep(500);
-      navigate("/");
+      if (response.token) {
+        toaster.add({
+          title: "Действие выполнено успешно!",
+          name: "Вы успешно авторизовались",
+          content: "Вы успешно авторизовались",
+          theme: "success",
+        });
+        loginContext.updateUser(response.token);
+        await sleep(500);
+        navigate("/");
+      }
     });
   };
 

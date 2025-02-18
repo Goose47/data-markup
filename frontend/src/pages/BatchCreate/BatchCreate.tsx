@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { block } from "../../utils/block";
 import "./BatchCreate.scss";
 import { BatchForm } from "../../components/BatchForm/BatchForm";
 import { CircleInfoFill } from "@gravity-ui/icons";
 import { createBatch, linkBatchToMarkupType } from "../../utils/requests";
 import { toaster } from "@gravity-ui/uikit/toaster-singleton";
+import { LoginContext } from "../Login/LoginContext";
+import { Loader } from "@gravity-ui/uikit";
+import { useNavigate } from "react-router";
 
 const b = block("batch-create");
 
@@ -16,6 +19,8 @@ export const BatchCreate = () => {
   const [priority, setPriority] = useState("6");
   const [selectedType, setSelectedType] = useState("");
   const [file, setFile] = useState<File>();
+
+  const navigate = useNavigate();
 
   const handleCreate = () => {
     if (
@@ -40,9 +45,40 @@ export const BatchCreate = () => {
       markups: file,
       type_id: parseInt(batchType),
     }).then((data) => {
-      linkBatchToMarkupType(data.id, parseInt(selectedType));
+      linkBatchToMarkupType(data.id, parseInt(selectedType)).then(() => {
+        toaster.add({
+          title: "Успешно выполнено",
+          name: "Успешно привязан новый тип разметки",
+          content: "Успешно привязан новый тип разметки",
+          theme: "success",
+        });
+        navigate("/batch/" + data.id);
+      });
     });
   };
+
+  const loginContext = useContext(LoginContext);
+  if (loginContext.loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: 500,
+        }}
+      >
+        <Loader></Loader>
+      </div>
+    );
+  }
+  if (loginContext.userRole !== "admin") {
+    return (
+      <div className={b()}>
+        <h1>Отказано в доступе</h1>
+      </div>
+    );
+  }
 
   return (
     <div className={b()}>
