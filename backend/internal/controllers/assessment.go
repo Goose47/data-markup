@@ -245,6 +245,7 @@ func (con *Assessment) Next(c *gin.Context) {
 		return
 	}
 
+	log.Info("searching for pending assesment")
 	var pendingAssessment models.Assessment
 	err = con.db.Model(models.Assessment{}).
 		Preload("Markup.Batch.MarkupTypes.Fields.AssessmentType").
@@ -257,14 +258,29 @@ func (con *Assessment) Next(c *gin.Context) {
 		return
 	}
 	if err == nil {
+		log.Info("pending assesment found", slog.Any("assessment_id", pendingAssessment.ID))
 		c.JSON(http.StatusOK, formatNextResponse(pendingAssessment))
 		return
 	}
 
+	log.Info("fetching priorities")
 	var priorities []int
+	//err = con.db.
+	//	Model("batches b").
+	//	Select("priority").
+	//	Joins("JOIN markups m ON m.batch_id = b.id").
+	//	Order("priority desc").
+	//	Distinct("priority").
+	//	Pluck("priority", &priorities).Error
 	err = con.db.
-		Model(models.Batch{}).
-		Order("priority desc").
+		Table("markups m").
+		Select("b.priority priority,a.id, m.id, b.overlaps").
+		Joins("JOIN batches b ON m.batch_id = b.id").
+		Joins("LEFT JOIN assessments a ON a.markup_id = m.id").
+		Where("m.status_id = ? and b.is_active IS TRUE", markupStatus.Pending).
+		Group("m.id, b.overlaps").
+		Having("COUNT(a.id) < b.overlaps").
+		Having("NOT EXISTS (SELECT 1 FROM assessments a2 WHERE a2.markup_id = m.id AND a2.user_id = ?)", user.ID).
 		Distinct("priority").
 		Pluck("priority", &priorities).Error
 
@@ -274,6 +290,7 @@ func (con *Assessment) Next(c *gin.Context) {
 		return
 	}
 	priority := weightedRandomChoice(priorities)
+	log.Info("selected priority", slog.Any("priority", priority))
 
 	var res struct {
 		MarkupID         uint `gorm:"column:id"`
