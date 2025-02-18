@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { block } from "../../utils/block";
 import "./MyMarkupTypes.scss";
 import { MarkupType } from "../../utils/types";
 import { getAvailableMarkupTypes } from "../../utils/requests";
 import { MyMarkupType } from "../../components/MyMarkupType/MyMarkupType";
 import { CircleInfoFill } from "@gravity-ui/icons";
+import { LoginContext } from "../Login/LoginContext";
+import { Loader } from "@gravity-ui/uikit";
 
 const b = block("my-markup-types");
 
@@ -17,6 +19,29 @@ export const MyMarkupTypes = () => {
       setMarkupTypes(value);
     });
   }, [rerenderState]);
+
+  const loginContext = useContext(LoginContext);
+  if (loginContext.loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: 500,
+        }}
+      >
+        <Loader></Loader>
+      </div>
+    );
+  }
+  if (loginContext.userRole !== "admin") {
+    return (
+      <div className={b()}>
+        <h1>Отказано в доступе</h1>
+      </div>
+    );
+  }
 
   return (
     <div className={b()}>

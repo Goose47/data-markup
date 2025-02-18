@@ -9,7 +9,7 @@ import {
   Progress,
   Table,
 } from "@gravity-ui/uikit";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   batchFind,
   downloadBatchResult,
@@ -17,13 +17,14 @@ import {
 } from "../../utils/requests";
 import { BatchMarkupType } from "../../utils/types";
 import { BatchHistory } from "../../components/BatchHistory/BatchHistory";
+import { LoginContext } from "../Login/LoginContext";
 
 const b = block("batch-markup");
 
 export const BatchMarkup = () => {
   const params = useParams();
 
-  const [state, setState] = useState({ page: 1, pageSize: 5 });
+  const [state, setState] = useState({ page: 1, pageSize: 10 });
   const navigate = useNavigate();
 
   const [batch, setBatch] = useState<BatchMarkupType>();
@@ -64,6 +65,29 @@ export const BatchMarkup = () => {
   const parsedJson = data.map((markup: BatchMarkupType) =>
     JSON.parse(markup.data)
   );
+
+  const loginContext = useContext(LoginContext);
+  if (loginContext.loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: 500,
+        }}
+      >
+        <Loader></Loader>
+      </div>
+    );
+  }
+  if (loginContext.userRole !== "admin") {
+    return (
+      <div className={b()}>
+        <h1>Отказано в доступе</h1>
+      </div>
+    );
+  }
 
   return (
     <div className={b()}>
@@ -143,8 +167,10 @@ export const BatchMarkup = () => {
             ...data.map((_, index) => ({
               id: data[index].id,
               correct_answer:
-                data[index].correct_assessment_hash !== null ? "да" : "нет",
-              number_of_answers: data[index].assessments?.length ?? 0,
+                data[index].correct_assessment_hash !== null ? "✅" : "❌",
+              number_of_answers:
+                data[index].assessments?.filter((ass) => ass.hash !== null)
+                  .length ?? 0,
               ...Object.keys(parsedJson[index]).reduce(
                 function (result, key) {
                   result[key] =

@@ -7,7 +7,7 @@ import {
   MarkupTypeField,
   MarkupTypeFull,
 } from "../../utils/types";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   batchFind,
   batchUpdate,
@@ -15,13 +15,15 @@ import {
   getDetailedMarkupType,
   handleUpdateMarkupTypeLinked,
 } from "../../utils/requests";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import {
   MarkupForm,
   MarkupTypeForm,
 } from "../../components/MarkupForm/MarkupForm";
 import { CircleInfoFill } from "@gravity-ui/icons";
 import { markTypeBackendToFrontend } from "../../utils/adapters";
+import { LoginContext } from "../Login/LoginContext";
+import { toaster } from "@gravity-ui/uikit/toaster-singleton";
 
 const b = block("batch-edit");
 
@@ -53,8 +55,19 @@ export const BatchEdit = () => {
     setBatch(updatedBatch);
   };
 
+  const navigate = useNavigate();
+
   const handleSubmit = () => {
-    if (batch) batchUpdate(batch);
+    if (batch)
+      batchUpdate(batch).then(() => {
+        toaster.add({
+          title: "Успешно выполнено",
+          name: "Успешно привязан новый тип разметки",
+          content: "Успешно привязан новый тип разметки",
+          theme: "success",
+        });
+        navigate("/batch/" + batch.id);
+      });
   };
 
   const handleUpdateMarkupType = (result: MarkupTypeField[]) => {
@@ -65,8 +78,42 @@ export const BatchEdit = () => {
     });
   };
 
+  const loginContext = useContext(LoginContext);
+  if (loginContext.loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: 500,
+        }}
+      >
+        <Loader></Loader>
+      </div>
+    );
+  }
+  if (loginContext.userRole !== "admin") {
+    return (
+      <div className={b()}>
+        <h1>Отказано в доступе</h1>
+      </div>
+    );
+  }
+
   if (!batch) {
-    return <Loader></Loader>;
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: 500,
+        }}
+      >
+        <Loader></Loader>
+      </div>
+    );
   }
 
   return (

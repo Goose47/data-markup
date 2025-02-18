@@ -81,3 +81,38 @@ export type AssessmentStoreRq = AssessmentUpdateRq & {
 };
 
 export type MarkupTypeFull = RequiredFields<MarkupType, "fields">;
+
+export type UserType = {
+  id: number;
+  email: string;
+  created_at: string;
+  roles: any[] | null;
+};
+
+export type AsseessmentType = {
+  user: UserType;
+  is_prior: boolean;
+  created_at: string;
+  updated_at: string;
+  hash: string;
+  fields: {
+    id: number;
+    assessment_id: number;
+    markup_type_field_id: number;
+    text: string | null;
+    markup_type_field?: {
+      id: number;
+      name: string;
+      label: string;
+    };
+  }[];
+  markup_type: {
+    fields: {
+      id: number;
+      name: string;
+      label: string;
+    }[];
+  };
+  is_correct?: boolean;
+  is_editable?: boolean;
+};

@@ -46,9 +46,11 @@ export type AssessmentData = AssessmentNext & { batchType: BatchType };
 export const Assessment = ({
   markupId,
   isAdmin,
+  triggerRerender,
 }: {
   markupId?: number;
   isAdmin?: boolean;
+  triggerRerender?: () => void;
 }) => {
   const [currentAssessment, setCurrentAssessment] = useState<
     AssessmentData | "loading" | "error" | null
@@ -152,6 +154,9 @@ export const Assessment = ({
                   currentAssessment.assessment_id ?? -1,
                   valueToFields(currentValue)
                 );
+              }
+              if (triggerRerender) {
+                triggerRerender();
               }
               toaster.add({
                 name: "Отправлено",

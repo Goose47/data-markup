@@ -1,11 +1,12 @@
-import { Button, Modal, Select, TextInput } from "@gravity-ui/uikit";
+import { Button, Loader, Modal, Select, TextInput } from "@gravity-ui/uikit";
 import { block } from "../../utils/block";
 import "./BatchForm.scss";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useContext, useEffect, useState } from "react";
 import { CircleInfoFill } from "@gravity-ui/icons";
 import { Link } from "react-router";
 import { MarkupType } from "../../utils/types";
 import { getAvailableMarkupTypes } from "../../utils/requests";
+import { LoginContext } from "../../pages/Login/LoginContext";
 
 const b = block("batch-form");
 
@@ -61,9 +62,32 @@ export const BatchForm = ({
   useEffect(() => {
     getAvailableMarkupTypes().then((value: MarkupType[]) => {
       setTypes(value);
-      setSelectedType(value.length ? String(value[0].id) : "");
+      setSelectedType(value?.length ? String(value[0].id) : "");
     });
   }, [setSelectedType, setTypes]);
+
+  const loginContext = useContext(LoginContext);
+  if (loginContext.loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: 500,
+        }}
+      >
+        <Loader></Loader>
+      </div>
+    );
+  }
+  if (loginContext.userRole !== "admin") {
+    return (
+      <div className={b()}>
+        <h1>Отказано в доступе</h1>
+      </div>
+    );
+  }
 
   return (
     <div className={b()}>
@@ -187,7 +211,9 @@ export const BatchForm = ({
             <label htmlFor="overlaps">
               Выберите тип разметки (ответы, предоставляемые для ассессоров)
               <br></br>Добавить свой тип разметки можно на{" "}
-              <Link to="/markup/create" target="_blank">этой странице</Link>
+              <Link to="/markup/create" target="_blank">
+                этой странице
+              </Link>
             </label>
             <Select
               onUpdate={(value) => setSelectedType(value[0])}

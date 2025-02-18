@@ -2,5 +2,10 @@
 $block: '.#{variables.$ns}markup-assessments';
 
 #{$block} {
-
+    max-width: 600px;
+    
+    &__block {
+        margin-top: 30px;
+        margin-bottom: 50px;
+    }
 }

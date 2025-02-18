@@ -13,6 +13,7 @@ $block: '.#{variables.$ns}sidebar';
     &__button {
         margin-top: 15px;
         margin-bottom: 15px;
+        display: block;;
     }
     &__navigation {
         margin-top: 30px;

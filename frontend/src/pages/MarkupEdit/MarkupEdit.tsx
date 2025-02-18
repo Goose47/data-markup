@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   MarkupForm,
   MarkupTypeForm,
@@ -7,12 +7,15 @@ import { block } from "../../utils/block";
 import { MarkupTypeField, MarkupTypeFull } from "../../utils/types";
 import "./MarkupEdit.scss";
 import { CircleInfoFill } from "@gravity-ui/icons";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import {
   getDetailedMarkupType,
   handleEditMarkupType,
 } from "../../utils/requests";
 import { markTypeBackendToFrontend } from "../../utils/adapters";
+import { LoginContext } from "../Login/LoginContext";
+import { Loader } from "@gravity-ui/uikit";
+import { toaster } from "@gravity-ui/uikit/toaster-singleton";
 
 const b = block("markup-edit");
 
@@ -22,11 +25,21 @@ export const MarkupEdit = () => {
 
   const params = useParams();
 
+  const navigate = useNavigate();
+
   const handleEdit = (result: MarkupTypeField[]) => {
     if (params.id) {
       handleEditMarkupType(params.id, {
         name: name,
         fields: result,
+      }).then(() => {
+        toaster.add({
+          title: "Успешно выполнено",
+          name: "Успешно отредактирован тип разметки",
+          content: "Успешно отредактирован тип разметки",
+          theme: "success",
+        });
+        navigate("/markup");
       });
     }
   };
@@ -39,6 +52,29 @@ export const MarkupEdit = () => {
       setName(data.name);
     });
   }, [params.id]);
+
+  const loginContext = useContext(LoginContext);
+  if (loginContext.loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: 500,
+        }}
+      >
+        <Loader></Loader>
+      </div>
+    );
+  }
+  if (loginContext.userRole !== "admin") {
+    return (
+      <div className={b()}>
+        <h1>Отказано в доступе</h1>
+      </div>
+    );
+  }
 
   return (
     <div className={b()}>
