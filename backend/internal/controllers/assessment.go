@@ -12,6 +12,7 @@ import (
 	"markup/internal/lib/auth"
 	"markup/internal/lib/responses"
 	"markup/internal/lib/validation/query"
+	"math/rand"
 	"net/http"
 	"time"
 )
@@ -244,20 +245,6 @@ func (con *Assessment) Next(c *gin.Context) {
 		return
 	}
 
-	var priorities []int
-	err = con.db.
-		Model(models.Batch{}).
-		Order("priority desc").
-		Distinct("priority").
-		Pluck("priority", &priorities).Error
-
-	if err != nil {
-		log.Error("unable to fetch priorities", slog.Any("error", err))
-		responses.InternalServerError(c)
-		return
-	}
-	// todo do smth w priorities
-
 	var pendingAssessment models.Assessment
 	err = con.db.Model(models.Assessment{}).
 		Preload("Markup.Batch.MarkupTypes.Fields.AssessmentType").
@@ -274,6 +261,20 @@ func (con *Assessment) Next(c *gin.Context) {
 		return
 	}
 
+	var priorities []int
+	err = con.db.
+		Model(models.Batch{}).
+		Order("priority desc").
+		Distinct("priority").
+		Pluck("priority", &priorities).Error
+
+	if err != nil {
+		log.Error("unable to fetch priorities", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+	priority := weightedRandomChoice(priorities)
+
 	var res struct {
 		MarkupID         uint `gorm:"column:id"`
 		AssessmentsCount int64
@@ -283,7 +284,7 @@ func (con *Assessment) Next(c *gin.Context) {
 		Select("markups.id, COUNT(assessments.id), batches.overlaps, markups.status_id").
 		Joins("JOIN batches ON markups.batch_id = batches.id").
 		Joins("LEFT JOIN assessments ON assessments.markup_id = markups.id").
-		Where("status_id = ? and batches.is_active IS TRUE", markupStatus.Pending).
+		Where("status_id = ? and batches.priority = ? and batches.is_active IS TRUE", markupStatus.Pending, priority).
 		Group("markups.id, markups.status_id, batches.overlaps").
 		Having("COUNT(assessments.id) < batches.overlaps").
 		Having("NOT EXISTS (SELECT 1 FROM assessments a WHERE a.markup_id = markups.id AND a.user_id = ?)", user.ID).
@@ -319,6 +320,28 @@ func (con *Assessment) Next(c *gin.Context) {
 	con.db.Preload("Markup.Batch.MarkupTypes.Fields.AssessmentType").First(&assessment)
 
 	c.JSON(http.StatusCreated, formatNextResponse(assessment))
+}
+
+func weightedRandomChoice(priorities []int) int {
+	// Create weight slices based on the values
+	totalWeight := 0
+	for _, p := range priorities {
+		totalWeight += p
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	randomVal := rand.Intn(totalWeight) // Pick a random number in the total weight range
+
+	// Select the number based on weighted distribution
+	currentWeight := 0
+	for _, p := range priorities {
+		currentWeight += p
+		if randomVal < currentWeight {
+			return p
+		}
+	}
+
+	return priorities[0] // Fallback (should never reach here)
 }
 
 func formatNextResponse(assessment models.Assessment) *gin.H {
