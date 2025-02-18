@@ -281,7 +281,7 @@ func (con *Assessment) Next(c *gin.Context) {
 		Where("m.status_id = ? and b.is_active IS TRUE", markupStatus.Pending).
 		Group("m.id, b.overlaps, b.priority").
 		//Having("COUNT(a.id) < b.overlaps").
-		Having("NOT EXISTS (SELECT 1 FROM assessments a3 WHERE a3.markup_id = m.id AND a3.hash IS NOT NULL)").
+		Having("NOT EXISTS (SELECT 1 FROM assessments a3 WHERE a3.markup_id = m.id AND a3.hash IS NULL)").
 		Having("NOT EXISTS (SELECT 1 FROM assessments a2 WHERE a2.markup_id = m.id AND a2.user_id = ?)", user.ID).
 		Distinct("priority").
 		Pluck("priority", &priorities).Error
@@ -291,6 +291,12 @@ func (con *Assessment) Next(c *gin.Context) {
 		responses.InternalServerError(c)
 		return
 	}
+	if len(priorities) == 0 {
+		log.Error("failed to find markup", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+
 	priority := weightedRandomChoice(priorities)
 	log.Info("selected priority", slog.Any("priority", priority))
 
@@ -306,7 +312,7 @@ func (con *Assessment) Next(c *gin.Context) {
 		Where("status_id = ? and batches.priority = ? and batches.is_active IS TRUE", markupStatus.Pending, priority).
 		Group("markups.id, markups.status_id, batches.overlaps").
 		//Having("COUNT(assessments.id) < batches.overlaps").
-		Having("NOT EXISTS (SELECT 1 FROM assessments a3 WHERE a3.markup_id = m.id AND a3.hash IS NOT NULL)").
+		Having("NOT EXISTS (SELECT 1 FROM assessments a3 WHERE a3.markup_id = m.id AND a3.hash IS NULL)").
 		Having("NOT EXISTS (SELECT 1 FROM assessments a WHERE a.markup_id = markups.id AND a.user_id = ?)", user.ID).
 		First(&res).Error
 
@@ -478,7 +484,7 @@ func (con *Assessment) Update(c *gin.Context) {
 		return
 	}
 
-	if assessment.UpdatedAt.Add(30 * time.Minute).Before(time.Now()) {
+	if !isAdmin && assessment.UpdatedAt.Add(30*time.Minute).Before(time.Now()) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "cannot update assessment if > 30 minutes have passed",
 		})
