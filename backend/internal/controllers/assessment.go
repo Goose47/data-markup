@@ -293,7 +293,7 @@ func (con *Assessment) Next(c *gin.Context) {
 	}
 	if len(priorities) == 0 {
 		log.Error("failed to find markup", slog.Any("error", err))
-		responses.InternalServerError(c)
+		responses.NotFoundError(c)
 		return
 	}
 
