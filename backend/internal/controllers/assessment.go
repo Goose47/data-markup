@@ -490,37 +490,7 @@ func (con *Assessment) Update(c *gin.Context) {
 		return
 	}
 
-	processedIds := make([]uint, len(data.Fields))
-
-	assessment.Fields = make([]models.AssessmentField, len(data.Fields))
-	for i, field := range data.Fields {
-		nextField := models.AssessmentField{
-			Text:              field.Text,
-			MarkupTypeFieldID: field.MarkupTypeFieldID,
-			AssessmentID:      assessment.ID,
-		}
-		if field.ID != nil {
-			nextField.ID = *field.ID
-			if err := tx.Save(&nextField).Error; err != nil {
-				tx.Rollback()
-				log.Error("failed to assessment type field", slog.Any("error", err))
-				responses.InternalServerError(c)
-				return
-			}
-			processedIds[i] = *field.ID
-			continue
-		}
-
-		if err := tx.Create(&nextField).Error; err != nil {
-			tx.Rollback()
-			log.Error("failed to create assessment field", slog.Any("error", err))
-			responses.InternalServerError(c)
-			return
-		}
-		processedIds[i] = nextField.ID
-	}
-
-	result := tx.Where("assessment_id = ? AND id NOT IN ?", assessment.ID, processedIds).Delete(&models.AssessmentField{})
+	result := tx.Where("assessment_id = ?", assessment.ID).Delete(&models.AssessmentField{})
 	if err := result.Error; err != nil {
 		tx.Rollback()
 		log.Error("failed to delete assessment fields", slog.Any("error", err))
@@ -528,10 +498,17 @@ func (con *Assessment) Update(c *gin.Context) {
 		return
 	}
 
-	// load current fields
-	tx.Preload("Fields").First(&assessment)
+	assessment.Fields = make([]models.AssessmentField, len(data.Fields))
+	for i, field := range data.Fields {
+		assessment.Fields[i] = models.AssessmentField{
+			Text:              field.Text,
+			MarkupTypeFieldID: field.MarkupTypeFieldID,
+		}
+	}
+
 	hash := assessment.CalculateHash()
 	assessment.Hash = &hash
+
 	if err := tx.Save(&assessment).Error; err != nil {
 		tx.Rollback()
 		log.Error("failed to update assessment", slog.Any("error", err))
