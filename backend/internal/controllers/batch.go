@@ -328,7 +328,7 @@ func (con *Batch) Store(c *gin.Context) {
 type updateBatchType struct {
 	Name     string `binding:"required" json:"name"`
 	Overlaps int    `binding:"required" json:"overlaps"`
-	Priority int    `binding:"required,gte=1,lte=10" json:"priority"`
+	Priority int    `binding:"required" json:"priority"`
 	TypeID   uint   `binding:"required" json:"type_id"`
 	IsActive *bool  `binding:"required" json:"is_active"`
 }
