@@ -8,6 +8,7 @@ import (
 	"markup/internal/domain/enums/markupStatus"
 	"markup/internal/domain/models"
 	"markup/internal/lib/responses"
+	"markup/internal/lib/validation/query"
 	"net/http"
 	"strconv"
 )
@@ -42,20 +43,13 @@ func (con *Markup) Index(c *gin.Context) {
 		return
 	}
 
-	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
-	if err != nil {
-		log.Warn("wrong page parameter", slog.Any("error", err))
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "wrong page parameter",
-		})
+	var page int
+	var perPage int
+
+	if page, err = query.DefaultInt(c, log, "page", "1"); err != nil {
 		return
 	}
-	perPage, err := strconv.Atoi(c.DefaultQuery("per_page", "10"))
-	if err != nil {
-		log.Warn("wrong per_page parameter", slog.Any("error", err))
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "wrong per_page parameter",
-		})
+	if perPage, err = query.DefaultInt(c, log, "per_page", "10"); err != nil {
 		return
 	}
 	offset := (page - 1) * perPage
@@ -68,6 +62,7 @@ func (con *Markup) Index(c *gin.Context) {
 	con.db.Limit(perPage).
 		Preload("Assessments").
 		Where("batch_id = ?", batchID).
+		Order("correct_assessment_hash IS NULL, id asc").
 		Offset(offset).
 		Find(&markups)
 
