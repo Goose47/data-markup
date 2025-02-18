@@ -15,3 +15,12 @@ $block: '.#{variables.$ns}my-batches-cards';
     }
 
 }
+
+@media (max-width: 1200px) {
+    #{$block} {
+        &__list {
+            width: calc(100% - 30px);
+        }
+    }
+    
+}
