@@ -453,6 +453,16 @@ func (con *Batch) TieMarkupType(c *gin.Context) {
 		return
 	}
 
+	// delete assessments of pending markups
+	tx.Table("assessments a").
+		Joins("JOIN markups m ON m.id = assessments.markup_id").
+		Where("m.batch_id = ? AND m.status_id", data.BatchID, markupStatus.Pending)
+	if err := tx.Error; err != nil {
+		log.Error("failed to delete assessments", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+
 	var markupType models.MarkupType
 	if data.MarkupTypeID != nil {
 		var existingMarkupType models.MarkupType
