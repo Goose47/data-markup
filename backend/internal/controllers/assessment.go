@@ -76,7 +76,7 @@ func (con *Assessment) Index(c *gin.Context) {
 
 	tx = con.db.Limit(perPage).
 		Offset(offset).
-		Preload("Fields").
+		Preload("Fields.MarkupTypeField").
 		Preload("User").
 		Preload("Markup.Batch.MarkupTypes.Fields")
 	if userID > 0 {

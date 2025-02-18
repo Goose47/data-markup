@@ -54,7 +54,7 @@ func (con *Profile) Me(c *gin.Context) {
 		return
 	}
 	con.db.
-		Preload("Assessments.Fields").
+		Preload("Assessments.Fields.MarkupTypeField").
 		Preload("Assessments.Markup").
 		First(&user)
 
@@ -91,7 +91,7 @@ func (con *Profile) Find(c *gin.Context) {
 	var user models.User
 	err := con.db.
 		Preload("Roles").
-		Preload("Assessments.Fields").
+		Preload("Assessments.Fields.MarkupTypeField").
 		Preload("Assessments.Markup").
 		Where("id = ?", id).
 		First(&user).Error

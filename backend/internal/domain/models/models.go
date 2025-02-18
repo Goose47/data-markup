@@ -130,5 +130,5 @@ type AssessmentField struct {
 	MarkupTypeFieldID uint            `json:"markup_type_field_id"`
 	Text              *string         `json:"text"`
 	Assessment        Assessment      `json:"-" gorm:"foreignKey:AssessmentID;references:ID"`
-	MarkupTypeField   MarkupTypeField `json:"-" gorm:"foreignKey:MarkupTypeFieldID;references:ID"`
+	MarkupTypeField   MarkupTypeField `json:"markup_type_field" gorm:"foreignKey:MarkupTypeFieldID;references:ID"`
 }
