@@ -632,13 +632,16 @@ func (con *Batch) Export(c *gin.Context) {
 		csvData = append(csvData, csvHeaders)
 
 		for _, markup := range markups {
-			if len(markup.Assessments) == 0 {
-				log.Warn("markup is empty", slog.Int("markup_id", int(markup.ID)))
-				continue
-			}
-
 			nextRow := make([]string, 0, len(csvHeaders))
 			nextRow = append(nextRow, markup.Data)
+
+			if len(markup.Assessments) == 0 {
+				log.Warn("markup is empty", slog.Int("markup_id", int(markup.ID)))
+				for range markupTypeFieldIDs {
+					nextRow = append(nextRow, "-")
+				}
+				continue
+			}
 
 			//if assessment has asssessmentField corresponding to markupTypeField, write "+"
 		loop:
