@@ -280,7 +280,8 @@ func (con *Assessment) Next(c *gin.Context) {
 		Joins("LEFT JOIN assessments a ON a.markup_id = m.id").
 		Where("m.status_id = ? and b.is_active IS TRUE", markupStatus.Pending).
 		Group("m.id, b.overlaps, b.priority").
-		Having("COUNT(a.id) < b.overlaps").
+		//Having("COUNT(a.id) < b.overlaps").
+		Having("NOT EXISTS (SELECT 1 FROM assessments a3 WHERE a3.markup_id = m.id AND a3.updated_at = a3.created_at)").
 		Having("NOT EXISTS (SELECT 1 FROM assessments a2 WHERE a2.markup_id = m.id AND a2.user_id = ?)", user.ID).
 		Distinct("priority").
 		Pluck("priority", &priorities).Error
@@ -304,7 +305,8 @@ func (con *Assessment) Next(c *gin.Context) {
 		Joins("LEFT JOIN assessments ON assessments.markup_id = markups.id").
 		Where("status_id = ? and batches.priority = ? and batches.is_active IS TRUE", markupStatus.Pending, priority).
 		Group("markups.id, markups.status_id, batches.overlaps").
-		Having("COUNT(assessments.id) < batches.overlaps").
+		//Having("COUNT(assessments.id) < batches.overlaps").
+		Having("NOT EXISTS (SELECT 1 FROM assessments a3 WHERE a3.markup_id = m.id AND a3.updated_at = a3.created_at)").
 		Having("NOT EXISTS (SELECT 1 FROM assessments a WHERE a.markup_id = markups.id AND a.user_id = ?)", user.ID).
 		First(&res).Error
 
@@ -319,11 +321,12 @@ func (con *Assessment) Next(c *gin.Context) {
 		responses.InternalServerError(c)
 		return
 	}
-
+	now := time.Now()
 	assessment := models.Assessment{
 		UserID:    user.ID,
 		MarkupID:  res.MarkupID,
-		CreatedAt: time.Now(),
+		CreatedAt: now,
+		UpdatedAt: &now,
 		IsPrior:   false,
 		Hash:      nil,
 	}
