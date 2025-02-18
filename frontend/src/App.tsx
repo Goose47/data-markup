@@ -15,7 +15,7 @@ import { BatchEdit } from "./pages/BatchEdit/BatchEdit";
 import { MarkupAssessments } from "./pages/MarkupAssessments/MarkupAssessments";
 import { Login } from "./pages/Login/Login";
 import { Register } from "./pages/Register/Register";
-import { LoginContext, LoginContextType } from "./pages/Login/LoginContext";
+import { LoginContext } from "./pages/Login/LoginContext";
 import { useCallback, useMemo, useState } from "react";
 import { userMe } from "./utils/requests";
 import { UserStatPage } from "./pages/UserStatPage/UserStatPage";

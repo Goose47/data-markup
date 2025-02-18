@@ -9,16 +9,25 @@ export const ButtonWithConfirm = ({
   children,
   handleSubmit,
   confirmText,
+  disabled,
 }: {
   children: ReactNode;
   handleSubmit: () => void;
   confirmText?: string;
+  disabled?: boolean;
 }) => {
   const [open, setOpen] = useState(false);
 
   return (
     <div className={b()}>
-      <div onClick={() => setOpen(true)}>{children}</div>
+      <div
+        onClick={() => {
+          if (disabled) return;
+          setOpen(true);
+        }}
+      >
+        {children}
+      </div>
       <Modal
         open={open}
         onClose={() => setOpen(false)}
@@ -27,7 +36,13 @@ export const ButtonWithConfirm = ({
         <h1>Подтвердите действие</h1>
         <p>{confirmText}</p>
         <div className={b("popup-button")}>
-          <Button onClick={() => setOpen(false)}>Отмена</Button>
+          <Button
+            onClick={() => {
+              setOpen(false);
+            }}
+          >
+            Отмена
+          </Button>
           <Button
             view="action"
             onClick={() => {
