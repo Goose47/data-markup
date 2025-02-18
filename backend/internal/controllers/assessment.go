@@ -195,6 +195,15 @@ func (con *Assessment) Store(c *gin.Context) {
 		return
 	}
 
+	// Delete admin assessment.
+	if err := tx.
+		Where("markup_id = ? AND is_prior IS TRUE", assessment.MarkupID).
+		Delete(models.Assessment{}).Error; err != nil {
+		tx.Rollback()
+		log.Error("failed to delete other admins' assessments", slog.Any("error", err))
+		responses.InternalServerError(c)
+	}
+
 	// Save assessment.
 	if err := tx.Create(&assessment).Error; err != nil {
 		tx.Rollback()
