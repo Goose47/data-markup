@@ -46,10 +46,14 @@ export type AssessmentData = AssessmentNext & { batchType: BatchType };
 export const Assessment = ({
   markupId,
   isAdmin,
+  isEditable,
+  assessmentId,
   triggerRerender,
 }: {
   markupId?: number;
   isAdmin?: boolean;
+  isEditable?: boolean;
+  assessmentId?: number;
   triggerRerender?: () => void;
 }) => {
   const [currentAssessment, setCurrentAssessment] = useState<
@@ -140,34 +144,40 @@ export const Assessment = ({
             onUpdateValue={setCurrentValue}
           />
 
-          <Button
-            view="action"
-            onClick={async () => {
-              setCurrentAssessment("loading");
-              if (isAdmin && markupId) {
-                await assessmentStore({
-                  markup_id: markupId,
-                  ...valueToFields(currentValue),
+          {isEditable !== false ? (
+            <Button
+              view="action"
+              onClick={async () => {
+                setCurrentAssessment("loading");
+                if (isAdmin && markupId) {
+                  await assessmentStore({
+                    markup_id: markupId,
+                    ...valueToFields(currentValue),
+                  });
+                } else {
+                  await assessmentUpdate(
+                    currentAssessment.assessment_id ?? assessmentId ?? -1,
+                    valueToFields(currentValue)
+                  );
+                }
+                if (triggerRerender) {
+                  triggerRerender();
+                }
+                toaster.add({
+                  name: "Отправлено",
+                  content: "+0.03 ₽",
+                  theme: "success",
                 });
-              } else {
-                await assessmentUpdate(
-                  currentAssessment.assessment_id ?? -1,
-                  valueToFields(currentValue)
-                );
-              }
-              if (triggerRerender) {
-                triggerRerender();
-              }
-              toaster.add({
-                name: "Отправлено",
-                content: "+0.03 ₽",
-                theme: "success",
-              });
-              setCurrentAssessment(null);
-            }}
-          >
-            {isAdmin ? "Установить эталонную оценку" : "Отправить"}
-          </Button>
+                setCurrentAssessment(null);
+              }}
+            >
+              {isAdmin ? "Установить эталонную оценку" : "Отправить"}
+            </Button>
+          ) : (
+            <Button view="action" disabled={true}>
+              Истекло время для редактирования
+            </Button>
+          )}
         </Flex>
       )}
     </div>

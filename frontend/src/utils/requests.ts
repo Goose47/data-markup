@@ -166,6 +166,14 @@ export const profileMe = async () => {
     .then((response) => response.data);
 };
 
+export const getAllProfiles = async () => {
+  return await axios
+    .get(API_PREFIX + "/api/v1/profiles", {
+      headers: getAuthHeaders(),
+    })
+    .then((response) => response.data);
+};
+
 export const assessmentNext = async () => {
   return await axios
     .post(

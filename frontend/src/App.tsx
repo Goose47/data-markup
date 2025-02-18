@@ -19,6 +19,7 @@ import { LoginContext, LoginContextType } from "./pages/Login/LoginContext";
 import { useCallback, useMemo, useState } from "react";
 import { userMe } from "./utils/requests";
 import { UserStatPage } from "./pages/UserStatPage/UserStatPage";
+import { UserList } from "./pages/UserList/UserList";
 
 const b = block("app");
 
@@ -88,6 +89,7 @@ export const App = () => {
                 <Route path="/login" element={<Login />}></Route>
                 <Route path="/register" element={<Register />}></Route>
                 <Route path="/stat" element={<UserStatPage />}></Route>
+                <Route path="/stat/all" element={<UserList />}></Route>
               </Routes>
             </div>
           </div>

@@ -2,7 +2,7 @@ import { Button, User } from "@gravity-ui/uikit";
 import { block } from "../../utils/block";
 
 import "./Sidebar.scss";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import axios from "axios";
 import { toaster } from "@gravity-ui/uikit/toaster-singleton";
 import { useContext, useEffect } from "react";
@@ -17,6 +17,8 @@ export const Sidebar = () => {
   const getLinkClass = (path: string) => {
     return location.pathname === path ? "_active" : "";
   };
+
+  const navigate = useNavigate();
 
   axios.interceptors.response.use(
     (response) => {
@@ -79,6 +81,7 @@ export const Sidebar = () => {
               confirmText="Подтвердите, что хотите выйти из аккаунта"
               handleSubmit={() => {
                 loginContext.updateUser("");
+                navigate("/login");
               }}
             >
               <Button view="action">Выйти из аккаунта</Button>
@@ -136,11 +139,16 @@ export const Sidebar = () => {
                   Личный кабинет
                 </Link>
               </li>
-              <li>
-                <Link to="/assessment" className={getLinkClass("/assessment")}>
-                  Приступить к разметке
-                </Link>
-              </li>
+              {loginContext.userRole !== "admin" && (
+                <li>
+                  <Link
+                    to="/assessment"
+                    className={getLinkClass("/assessment")}
+                  >
+                    Приступить к разметке
+                  </Link>
+                </li>
+              )}
             </ul>
           </div>
         </>
