@@ -33,7 +33,8 @@ func NewAssessment(
 
 type assessmentsResponse struct {
 	models.Assessment
-	models.MarkupType
+	MarkupType models.MarkupType `json:"markup_type"`
+	User       models.User       `json:"user"`
 }
 
 func (con *Assessment) Index(c *gin.Context) {
@@ -77,7 +78,7 @@ func (con *Assessment) Index(c *gin.Context) {
 		Offset(offset).
 		Preload("Fields").
 		Preload("User").
-		Preload("Markup.Batch.MarkupTypes")
+		Preload("Markup.Batch.MarkupTypes.Fields")
 	if userID > 0 {
 		tx = tx.Where("user_id = ?", userID)
 	}
@@ -100,6 +101,7 @@ func (con *Assessment) Index(c *gin.Context) {
 		resp[i] = assessmentsResponse{
 			assessment,
 			respectiveMarkupType,
+			assessment.User,
 		}
 	}
 
