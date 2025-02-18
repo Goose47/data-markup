@@ -312,7 +312,7 @@ func (con *Assessment) Next(c *gin.Context) {
 		Where("status_id = ? and batches.priority = ? and batches.is_active IS TRUE", markupStatus.Pending, priority).
 		Group("markups.id, markups.status_id, batches.overlaps").
 		//Having("COUNT(assessments.id) < batches.overlaps").
-		Having("NOT EXISTS (SELECT 1 FROM assessments a3 WHERE a3.markup_id = m.id AND a3.hash IS NULL)").
+		Having("NOT EXISTS (SELECT 1 FROM assessments a3 WHERE a3.markup_id = markups.id AND a3.hash IS NULL)").
 		Having("NOT EXISTS (SELECT 1 FROM assessments a WHERE a.markup_id = markups.id AND a.user_id = ?)", user.ID).
 		First(&res).Error
 
