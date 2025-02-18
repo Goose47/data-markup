@@ -20,6 +20,7 @@ export const UserStatPage = () => {
 
   useEffect(() => {
     profileMe().then((data: { assessments: AsseessmentType[] }) => {
+      if (!data?.assessments?.length) return;
       setAssessments(data.assessments.filter((el) => el.hash !== null));
     });
   }, [triggerRerender]);
