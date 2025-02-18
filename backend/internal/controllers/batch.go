@@ -128,7 +128,7 @@ func (con *Batch) Find(c *gin.Context) {
 		Table("assessments a").
 		Select("DISTINCT a.id").
 		Joins("JOIN markups m ON a.markup_id = m.id").
-		Where("m.batch_id = ?", batch.ID).
+		Where("m.batch_id = ? AND a.hash IS NOT NULL", batch.ID).
 		Count(&assessmentCount)
 
 	var correctAssessmentCount int64
@@ -136,7 +136,7 @@ func (con *Batch) Find(c *gin.Context) {
 		Table("assessments a").
 		Select("DISTINCT a.id").
 		Joins("JOIN markups m ON a.markup_id = m.id AND a.hash = m.correct_assessment_hash").
-		Where("m.batch_id = ?", batch.ID).
+		Where("m.batch_id = ? AND a.hash IS NOT NULL", batch.ID).
 		Count(&correctAssessmentCount)
 
 	var res struct {
@@ -639,12 +639,6 @@ func (con *Batch) Export(c *gin.Context) {
 					nextRow = append(nextRow, "+")
 					continue loop
 				}
-				//for _, assessmentField := range markup.Assessments[0].Fields {
-				//	if slices.Contains(markupTypeFieldIDs, assessmentField.MarkupTypeFieldID) {
-				//		nextRow = append(nextRow, "+")
-				//		continue loop
-				//	}
-				//}
 				nextRow = append(nextRow, "-")
 			}
 
