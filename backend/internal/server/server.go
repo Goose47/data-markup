@@ -23,6 +23,7 @@ func NewRouter(
 	assessmentCon *controllers.Assessment,
 	authCon *controllers.Auth,
 	profileCon *controllers.Profile,
+	honeypotCon *controllers.Honeypot,
 ) *gin.Engine {
 	var mode string
 	switch env {
@@ -93,6 +94,11 @@ func NewRouter(
 				profile.GET("/me", profileCon.Me)
 				profile.GET("/:id", profileCon.Find)
 				profile.GET("", profileCon.Index)
+			}
+			honeypots := v1protected.Group("/honeypots")
+			{
+				honeypots.GET("", honeypotCon.Index)
+				honeypots.POST("/:id", honeypotCon.Store)
 			}
 		}
 

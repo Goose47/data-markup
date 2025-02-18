@@ -71,7 +71,7 @@ func (con *Batch) Index(c *gin.Context) {
 	var total int64
 	tx := con.db.Model(&models.Batch{})
 	if !isAdmin {
-		tx = tx.Where("user_id = ?", user.ID)
+		tx = tx.Where("user_id = ? AND is_honeypot IS false", user.ID)
 	}
 	tx.Count(&total)
 
@@ -79,7 +79,7 @@ func (con *Batch) Index(c *gin.Context) {
 		Offset(offset).
 		Order("created_at DESC")
 	if !isAdmin {
-		tx = tx.Where("user_id = ?", user.ID)
+		tx = tx.Where("user_id = ? AND is_honeypot IS false", user.ID)
 	}
 	tx.Find(&batches)
 

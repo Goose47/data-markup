@@ -47,6 +47,7 @@ type Batch struct {
 	CreatedAt   time.Time    `json:"created_at"`
 	IsActive    bool         `json:"is_active"`
 	TypeID      uint         `json:"type_id"`
+	IsHoneypot  bool         `json:"is_honeypot" gorm:"default:false"`
 	Markups     []Markup     `json:"-" gorm:"foreignKey:BatchID;references:ID"`
 	MarkupTypes []MarkupType `json:"-" gorm:"foreignKey:BatchID;references:ID"`
 	Users       []User       `json:"-" gorm:"many2many:user_batches;"`
