@@ -1,0 +1,6 @@
+@use '../../variables.scss';
+$block: '.#{variables.$ns}register';
+
+#{$block} {
+
+}

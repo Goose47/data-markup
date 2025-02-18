@@ -1,0 +1,13 @@
+@use '../../variables.scss';
+$block: '.#{variables.$ns}batch-history';
+
+#{$block} {
+    &__arrow {
+        display: flex;
+        justify-content: center;
+        margin-top: 5px;
+        margin-bottom: 15px;
+        font-size: 30px;
+        
+    }
+}

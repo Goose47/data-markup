@@ -5,6 +5,7 @@ export const markTypeBackendToFrontend = (
   data: MarkupTypeFull
 ): MarkupTypeForm[] => {
   const mapping: Record<number, MarkupTypeField[]> = {};
+  if (data.fields === null) return [];
   data?.fields.forEach((field) => {
     if (!mapping[field.group_id]) {
       mapping[field.group_id] = [];

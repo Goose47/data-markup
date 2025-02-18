@@ -3,4 +3,31 @@ $block: '.#{variables.$ns}batch-edit';
 
 #{$block} {
 
+    max-width: 600px;
+    margin-top: 15px;
+    &__input-group {
+        margin-top: 20px;
+    }
+
+    a {
+        color: var(--g-color-base-brand);
+    }
+
+    &__popup-button {
+        margin-top: 15px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    &__popup {
+        padding: 15px 30px;
+        h1 {
+            margin-bottom: 10px;
+        }
+        p {
+            margin-top: 0;
+        }
+    }
+
 }
