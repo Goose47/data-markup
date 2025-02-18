@@ -71,7 +71,7 @@ func (con *Batch) Index(c *gin.Context) {
 	var total int64
 	tx := con.db.Model(&models.Batch{})
 	if !isAdmin {
-		tx = tx.Where("user_id = ?", user.ID)
+		tx = tx.Where("user_id = ? AND is_honeypot IS false", user.ID)
 	}
 	tx.Count(&total)
 
@@ -79,7 +79,7 @@ func (con *Batch) Index(c *gin.Context) {
 		Offset(offset).
 		Order("created_at DESC")
 	if !isAdmin {
-		tx = tx.Where("user_id = ?", user.ID)
+		tx = tx.Where("user_id = ? AND is_honeypot IS false", user.ID)
 	}
 	tx.Find(&batches)
 
@@ -453,6 +453,16 @@ func (con *Batch) TieMarkupType(c *gin.Context) {
 		return
 	}
 
+	// delete assessments of pending markups
+	tx.Table("assessments a").
+		Joins("JOIN markups m ON m.id = assessments.markup_id").
+		Where("m.batch_id = ? AND m.status_id", data.BatchID, markupStatus.Pending)
+	if err := tx.Error; err != nil {
+		log.Error("failed to delete assessments", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+
 	var markupType models.MarkupType
 	if data.MarkupTypeID != nil {
 		var existingMarkupType models.MarkupType
@@ -622,13 +632,16 @@ func (con *Batch) Export(c *gin.Context) {
 		csvData = append(csvData, csvHeaders)
 
 		for _, markup := range markups {
-			if len(markup.Assessments) == 0 {
-				log.Warn("markup is empty", slog.Int("markup_id", int(markup.ID)))
-				continue
-			}
-
 			nextRow := make([]string, 0, len(csvHeaders))
 			nextRow = append(nextRow, markup.Data)
+
+			if len(markup.Assessments) == 0 {
+				log.Warn("markup is empty", slog.Int("markup_id", int(markup.ID)))
+				for range markupTypeFieldIDs {
+					nextRow = append(nextRow, "-")
+				}
+				continue
+			}
 
 			//if assessment has asssessmentField corresponding to markupTypeField, write "+"
 		loop:

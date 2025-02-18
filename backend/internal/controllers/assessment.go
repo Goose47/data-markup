@@ -12,6 +12,7 @@ import (
 	"markup/internal/lib/auth"
 	"markup/internal/lib/responses"
 	"markup/internal/lib/validation/query"
+	"math/rand"
 	"net/http"
 	"time"
 )
@@ -85,6 +86,7 @@ func (con *Assessment) Index(c *gin.Context) {
 	if markupID > 0 {
 		tx = tx.Where("markup_id = ?", markupID)
 	}
+	tx = tx.Where("hash IS NOT NULL")
 	tx.Find(&assessments)
 
 	resp := make([]assessmentsResponse, len(assessments))
@@ -244,20 +246,7 @@ func (con *Assessment) Next(c *gin.Context) {
 		return
 	}
 
-	var priorities []int
-	err = con.db.
-		Model(models.Batch{}).
-		Order("priority desc").
-		Distinct("priority").
-		Pluck("priority", &priorities).Error
-
-	if err != nil {
-		log.Error("unable to fetch priorities", slog.Any("error", err))
-		responses.InternalServerError(c)
-		return
-	}
-	// todo do smth w priorities
-
+	log.Info("searching for pending assesment")
 	var pendingAssessment models.Assessment
 	err = con.db.Model(models.Assessment{}).
 		Preload("Markup.Batch.MarkupTypes.Fields.AssessmentType").
@@ -270,9 +259,39 @@ func (con *Assessment) Next(c *gin.Context) {
 		return
 	}
 	if err == nil {
+		log.Info("pending assesment found", slog.Any("assessment_id", pendingAssessment.ID))
 		c.JSON(http.StatusOK, formatNextResponse(pendingAssessment))
 		return
 	}
+
+	log.Info("fetching priorities")
+	var priorities []int
+	//err = con.db.
+	//	Model("batches b").
+	//	Select("priority").
+	//	Joins("JOIN markups m ON m.batch_id = b.id").
+	//	Order("priority desc").
+	//	Distinct("priority").
+	//	Pluck("priority", &priorities).Error
+	err = con.db.
+		Table("markups m").
+		Select("b.priority priority,a.id, m.id, b.overlaps").
+		Joins("JOIN batches b ON m.batch_id = b.id").
+		Joins("LEFT JOIN assessments a ON a.markup_id = m.id").
+		Where("m.status_id = ? and b.is_active IS TRUE", markupStatus.Pending).
+		Group("m.id, b.overlaps, b.priority").
+		Having("COUNT(a.id) < b.overlaps").
+		Having("NOT EXISTS (SELECT 1 FROM assessments a2 WHERE a2.markup_id = m.id AND a2.user_id = ?)", user.ID).
+		Distinct("priority").
+		Pluck("priority", &priorities).Error
+
+	if err != nil {
+		log.Error("unable to fetch priorities", slog.Any("error", err))
+		responses.InternalServerError(c)
+		return
+	}
+	priority := weightedRandomChoice(priorities)
+	log.Info("selected priority", slog.Any("priority", priority))
 
 	var res struct {
 		MarkupID         uint `gorm:"column:id"`
@@ -283,7 +302,7 @@ func (con *Assessment) Next(c *gin.Context) {
 		Select("markups.id, COUNT(assessments.id), batches.overlaps, markups.status_id").
 		Joins("JOIN batches ON markups.batch_id = batches.id").
 		Joins("LEFT JOIN assessments ON assessments.markup_id = markups.id").
-		Where("status_id = ? and batches.is_active IS TRUE", markupStatus.Pending).
+		Where("status_id = ? and batches.priority = ? and batches.is_active IS TRUE", markupStatus.Pending, priority).
 		Group("markups.id, markups.status_id, batches.overlaps").
 		Having("COUNT(assessments.id) < batches.overlaps").
 		Having("NOT EXISTS (SELECT 1 FROM assessments a WHERE a.markup_id = markups.id AND a.user_id = ?)", user.ID).
@@ -319,6 +338,28 @@ func (con *Assessment) Next(c *gin.Context) {
 	con.db.Preload("Markup.Batch.MarkupTypes.Fields.AssessmentType").First(&assessment)
 
 	c.JSON(http.StatusCreated, formatNextResponse(assessment))
+}
+
+func weightedRandomChoice(priorities []int) int {
+	// Create weight slices based on the values
+	totalWeight := 0
+	for _, p := range priorities {
+		totalWeight += p
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	randomVal := rand.Intn(totalWeight) // Pick a random number in the total weight range
+
+	// Select the number based on weighted distribution
+	currentWeight := 0
+	for _, p := range priorities {
+		currentWeight += p
+		if randomVal < currentWeight {
+			return p
+		}
+	}
+
+	return priorities[0] // Fallback (should never reach here)
 }
 
 func formatNextResponse(assessment models.Assessment) *gin.H {
@@ -449,37 +490,7 @@ func (con *Assessment) Update(c *gin.Context) {
 		return
 	}
 
-	processedIds := make([]uint, len(data.Fields))
-
-	assessment.Fields = make([]models.AssessmentField, len(data.Fields))
-	for i, field := range data.Fields {
-		nextField := models.AssessmentField{
-			Text:              field.Text,
-			MarkupTypeFieldID: field.MarkupTypeFieldID,
-			AssessmentID:      assessment.ID,
-		}
-		if field.ID != nil {
-			nextField.ID = *field.ID
-			if err := tx.Save(&nextField).Error; err != nil {
-				tx.Rollback()
-				log.Error("failed to assessment type field", slog.Any("error", err))
-				responses.InternalServerError(c)
-				return
-			}
-			processedIds[i] = *field.ID
-			continue
-		}
-
-		if err := tx.Create(&nextField).Error; err != nil {
-			tx.Rollback()
-			log.Error("failed to create assessment field", slog.Any("error", err))
-			responses.InternalServerError(c)
-			return
-		}
-		processedIds[i] = nextField.ID
-	}
-
-	result := tx.Where("assessment_id = ? AND id NOT IN ?", assessment.ID, processedIds).Delete(&models.AssessmentField{})
+	result := tx.Where("assessment_id = ?", assessment.ID).Delete(&models.AssessmentField{})
 	if err := result.Error; err != nil {
 		tx.Rollback()
 		log.Error("failed to delete assessment fields", slog.Any("error", err))
@@ -487,10 +498,17 @@ func (con *Assessment) Update(c *gin.Context) {
 		return
 	}
 
-	// load current fields
-	tx.Preload("Fields").First(&assessment)
+	assessment.Fields = make([]models.AssessmentField, len(data.Fields))
+	for i, field := range data.Fields {
+		assessment.Fields[i] = models.AssessmentField{
+			Text:              field.Text,
+			MarkupTypeFieldID: field.MarkupTypeFieldID,
+		}
+	}
+
 	hash := assessment.CalculateHash()
 	assessment.Hash = &hash
+
 	if err := tx.Save(&assessment).Error; err != nil {
 		tx.Rollback()
 		log.Error("failed to update assessment", slog.Any("error", err))

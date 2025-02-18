@@ -51,6 +51,7 @@ func New(
 	assessmentCon := controllers.NewAssessment(log, db)
 	authCon := controllers.NewAuth(log, db, jwtConfig.Secret)
 	profileCon := controllers.NewProfile(log, db)
+	honeypotCon := controllers.NewHoneypot(log, db)
 
 	router := server.NewRouter(
 		log,
@@ -64,6 +65,7 @@ func New(
 		assessmentCon,
 		authCon,
 		profileCon,
+		honeypotCon,
 	)
 	serverApp := serverapp.New(log, port, router)
 
