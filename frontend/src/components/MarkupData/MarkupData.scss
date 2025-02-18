@@ -10,5 +10,13 @@ $block: '.#{variables.$ns}markup-data';
     &__compare {
         width: 100%;
         overflow-x: scroll;
+        display: flex;
+
+        td, th {
+            padding: 15px;
+            min-width: 100px;
+        }
+
     }
+
 }

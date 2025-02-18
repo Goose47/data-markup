@@ -1,4 +1,4 @@
-import { Button, Modal, Select, TextInput } from "@gravity-ui/uikit";
+import { Button, Card, Modal, Select, TextInput } from "@gravity-ui/uikit";
 import { block } from "../../utils/block";
 import "./MarkupForm.scss";
 import { TrashBin, Plus } from "@gravity-ui/icons";
@@ -102,7 +102,7 @@ export const MarkupForm = ({
 
       <div className={b("input-group")}>
         {markups.map((markup, markupIndex) => (
-          <div key={markupIndex} className={b("input-type")}>
+          <Card key={markupIndex} className={b("input-type")}>
             <div
               className={b("delete")}
               onClick={() => {
@@ -195,11 +195,13 @@ export const MarkupForm = ({
                 />
               </div>
             )}
-          </div>
+          </Card>
         ))}
 
-        <div className={b("input-type")} onClick={handleAddNewMarkup}>
-          <Plus width={20} height={20} />
+        <div onClick={handleAddNewMarkup}>
+          <Card className={b("input-type")}>
+            <Plus width={20} height={20} />
+          </Card>
         </div>
       </div>
       <div className={b("input-group")}>

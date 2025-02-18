@@ -13,12 +13,20 @@ export type MarkupTypeRq = {
   fields: MarkupTypeField[];
 };
 
+export type MarkupTypeUpdateRq = MarkupTypeRq & {
+  batch_id: number;
+};
+
 export type MarkupType = {
   id: number;
   batch_id: number | null;
   name: string;
   user_id: number | null;
-  fields?: MarkupTypeField[];
+  fields?: MarkupTypeField[] | null;
+  markup_count: number;
+  assessment_count: number;
+  correct_assessment_count: number;
+  created_at: string;
 };
 
 export type BatchRq = {
@@ -44,11 +52,16 @@ export type BatchMarkupType = {
   batch_id: number;
   status_id: number;
   data: string;
-  assessments: any;
+  correct_assessment_hash: string | null;
+  assessments: any[];
+  markup_count: number;
+  processed_markup_count: number;
+  assessment_count: number;
+  correct_assessment_count: number;
 };
 
 export type AssessmentNext = {
-  assessment_id: number;
+  assessment_id?: number;
   /** assume it's a valid JSON */
   data: string;
   markup_type: MarkupType;
@@ -61,6 +74,10 @@ export type AssesmentUpdateField = {
 
 export type AssessmentUpdateRq = {
   fields: AssesmentUpdateField[];
+};
+
+export type AssessmentStoreRq = AssessmentUpdateRq & {
+  markup_id: number;
 };
 
 export type MarkupTypeFull = RequiredFields<MarkupType, "fields">;

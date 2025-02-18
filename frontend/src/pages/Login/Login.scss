@@ -1,11 +1,10 @@
 @use '../../variables.scss';
-$block: '.#{variables.$ns}batch-markup';
+$block: '.#{variables.$ns}login';
 
 #{$block} {
     max-width: 600px;
 
     h1 {
-        padding-top: 15px;
         font-size: 26px;
         font-weight: 800;
     }
@@ -22,4 +21,9 @@ $block: '.#{variables.$ns}batch-markup';
         font-weight: 500;
         margin-bottom: 5px;
     }
+
+    &__input-group {
+        margin-top: 20px;
+    }
+
 }

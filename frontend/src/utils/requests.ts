@@ -1,9 +1,11 @@
 import axios from "axios";
 import {
+  AssessmentStoreRq,
   AssessmentUpdateRq,
   BatchCardType,
   BatchRq,
   MarkupTypeRq,
+  MarkupTypeUpdateRq,
 } from "./types";
 
 const API_PREFIX = "https://api.rwfshr.ru";
@@ -27,9 +29,24 @@ export const handleEditMarkupType = async (
     });
 };
 
-export const getAvailableMarkupTypes = async () => {
+export const handleUpdateMarkupTypeLinked = async (
+  request: MarkupTypeUpdateRq
+) => {
   return await axios
-    .get(API_PREFIX + "/api/v1/markupTypes?batch_id=0")
+    .post(
+      API_PREFIX + "/api/v1/batches/" + request.batch_id + "/markupTypes",
+      request
+    )
+    .then((response) => {
+      return response.data;
+    });
+};
+
+export const getAvailableMarkupTypes = async (
+  batchId: number | undefined = undefined
+) => {
+  return await axios
+    .get(API_PREFIX + "/api/v1/markupTypes?batch_id=" + (batchId ? batchId : 0))
     .then((response) => response.data.data);
 };
 
@@ -118,8 +135,40 @@ export const assessmentUpdate = async (
     .then((response) => response.data);
 };
 
+export const assessmentStore = async (data: AssessmentStoreRq) => {
+  return await axios
+    .post(API_PREFIX + "/api/v1/assessments", data)
+    .then((response) => response.data);
+};
+
 export const batchFind = async (batchId: number) => {
   return await axios
     .get(API_PREFIX + "/api/v1/batches/" + batchId)
+    .then((response) => response.data);
+};
+
+export const downloadBatchResult = (batchId: number) => {
+  axios
+    .get(API_PREFIX + "/api/v1/batches/" + batchId + "/export", {
+      responseType: "blob",
+    })
+    .then((blob) => {
+      const _url = window.URL.createObjectURL(blob.data);
+      window.open(_url, "_blank")?.focus();
+    });
+};
+
+export const getBatchMarkupData = async (markupId: number) => {
+  return await axios
+    .get(API_PREFIX + "/api/v1/markups/" + markupId)
+    .then((response) => response.data);
+};
+
+export const handleLogin = async (email: string, password: string) => {
+  return await axios
+    .post(API_PREFIX + "/api/v1/auth/login", {
+      email: email,
+      password: password,
+    })
     .then((response) => response.data);
 };

@@ -34,14 +34,16 @@ export const MarkupTypeGroup = ({
             value={String(field.id)}
             content={field.name}
             onUpdate={(checked) => {
-              let value: string = '';
+              let value: string = "";
               if (checked) {
                 value = String(field.id);
               }
-              onUpdate([ {
-                value: value,
-                assessment_type_id: field.assessment_type_id,
-              } ]);
+              onUpdate([
+                {
+                  value: value,
+                  assessment_type_id: field.assessment_type_id,
+                },
+              ]);
             }}
             checked={value[0]?.value === String(field.id)}
           />
@@ -60,15 +62,25 @@ export const MarkupTypeGroup = ({
             onUpdate={(checked) => {
               let valueCopy: FieldValue[] = _.cloneDeep(value);
               if (checked) {
-                if (!valueCopy.some(({value}) => value === String(field.id))) {
-                  valueCopy.push({value: String(field.id), assessment_type_id: field.assessment_type_id});
+                if (
+                  !valueCopy.some(({ value }) => value === String(field.id))
+                ) {
+                  valueCopy.push({
+                    value: String(field.id),
+                    assessment_type_id: field.assessment_type_id,
+                  });
                 }
               } else {
-                valueCopy.splice(valueCopy.findIndex(({ value }) => value === String(field.id)), 1);
+                valueCopy.splice(
+                  valueCopy.findIndex(
+                    ({ value }) => value === String(field.id)
+                  ),
+                  1
+                );
               }
               onUpdate(valueCopy);
             }}
-            checked={value.some(({value}) => value === String(field.id))}
+            checked={value.some(({ value }) => value === String(field.id))}
           />
         ))}
       </div>
@@ -87,7 +99,14 @@ export const MarkupTypeGroup = ({
           width={"max"}
           id={`${uniqueId}_${String(fields[0].group_id)}_${String(fields[0].id)}`}
           value={value.map(({ value }) => value)}
-          onUpdate={(value) => onUpdate(value.map((v) => ({ value: v, assessment_type_id: fields[0].assessment_type_id })))}
+          onUpdate={(value) =>
+            onUpdate(
+              value.map((v) => ({
+                value: v,
+                assessment_type_id: fields[0].assessment_type_id,
+              }))
+            )
+          }
         >
           {fields.map((field) => (
             <Select.Option value={String(field.id)}>{field.name}</Select.Option>
@@ -110,7 +129,14 @@ export const MarkupTypeGroup = ({
           width={"max"}
           id={`${uniqueId}_${String(fields[0].group_id)}_${String(fields[0].id)}`}
           value={value.map(({ value }) => value)}
-          onUpdate={(value) => onUpdate(value.map((v) => ({ value: v, assessment_type_id: fields[0].assessment_type_id })))}
+          onUpdate={(value) =>
+            onUpdate(
+              value.map((v) => ({
+                value: v,
+                assessment_type_id: fields[0].assessment_type_id,
+              }))
+            )
+          }
         >
           {fields.map((field) => (
             <Select.Option value={String(field.id)}>{field.name}</Select.Option>
@@ -119,6 +145,7 @@ export const MarkupTypeGroup = ({
       </div>
     );
   } else if (fields[0].assessment_type_id === 5) {
+    console.log(value);
     return (
       <div className={b("text")}>
         <label
@@ -130,7 +157,13 @@ export const MarkupTypeGroup = ({
         <TextInput
           value={value[0]?.value}
           onUpdate={(v) => {
-            onUpdate([{value: v, assessment_type_id: fields[0].assessment_type_id, fieldIdFuckBackend: fields[0].id}]);
+            onUpdate([
+              {
+                value: v,
+                assessment_type_id: fields[0].assessment_type_id,
+                fieldIdFuckBackend: fields[0].id,
+              },
+            ]);
           }}
           placeholder={fields[0].label}
           id={`${uniqueId}_${String(fields[0].group_id)}_${String(fields[0].id)}`}
