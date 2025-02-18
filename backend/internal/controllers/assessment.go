@@ -278,7 +278,7 @@ func (con *Assessment) Next(c *gin.Context) {
 		Joins("JOIN batches b ON m.batch_id = b.id").
 		Joins("LEFT JOIN assessments a ON a.markup_id = m.id").
 		Where("m.status_id = ? and b.is_active IS TRUE", markupStatus.Pending).
-		Group("m.id, b.overlaps").
+		Group("m.id, b.overlaps, b.priority").
 		Having("COUNT(a.id) < b.overlaps").
 		Having("NOT EXISTS (SELECT 1 FROM assessments a2 WHERE a2.markup_id = m.id AND a2.user_id = ?)", user.ID).
 		Distinct("priority").
