@@ -91,6 +91,7 @@ func NewRouter(
 			profile := v1protected.Group("/profiles")
 			{
 				profile.GET("/me", profileCon.Me)
+				profile.GET("/:id", profileCon.Find)
 				profile.GET("", profileCon.Index)
 			}
 		}
