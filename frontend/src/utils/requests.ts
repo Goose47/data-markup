@@ -256,3 +256,15 @@ export const userMe = async () => {
     })
     .then((response) => response.data);
 };
+
+export const makeHoneypot = async (markupId: number) => {
+  return await axios
+    .post(
+      API_PREFIX + "/api/v1/honeypots/" + markupId,
+      {},
+      {
+        headers: getAuthHeaders(),
+      }
+    )
+    .then((response) => response.data);
+};

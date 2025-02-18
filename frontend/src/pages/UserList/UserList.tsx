@@ -49,6 +49,7 @@ export const UserList = () => {
 
   return (
     <div className={b()}>
+      <h1>Общий список ассессоров и администраторов</h1>
       <Table columns={columns} data={users}></Table>
     </div>
   );

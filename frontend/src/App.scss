@@ -14,6 +14,7 @@ $block: '.#{variables.$ns}app';
         gap: 15px;
     }
     &__content {
-        width: calc(100% - 230px);
+        width: calc(100% - 400px);
+        padding-top: 15px;
     }
 }

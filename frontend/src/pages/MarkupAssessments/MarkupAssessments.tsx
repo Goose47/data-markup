@@ -1,12 +1,24 @@
 import { useParams } from "react-router";
 import { block } from "../../utils/block";
 import "./MarkupAssessments.scss";
-import { Loader, Pagination, PaginationProps, Table } from "@gravity-ui/uikit";
+import {
+  Button,
+  Loader,
+  Pagination,
+  PaginationProps,
+  Table,
+} from "@gravity-ui/uikit";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { Assessment } from "../Assessment/Assessment";
 import { LoginContext } from "../Login/LoginContext";
 import { AsseessmentType } from "../../utils/types";
-import { assessmentIndex, getBatchMarkupData } from "../../utils/requests";
+import {
+  assessmentIndex,
+  getBatchMarkupData,
+  makeHoneypot,
+} from "../../utils/requests";
+import { ButtonWithConfirm } from "../../components/ButtonWithConfirm/ButtonWithConfirm";
+import { CircleInfoFill } from "@gravity-ui/icons";
 
 const b = block("markup-assessments");
 
@@ -86,6 +98,12 @@ export const MarkupAssessments = () => {
     ];
   }, []);
 
+  const handleMakeHoneypot = () => {
+    makeHoneypot(parseInt(markupId ?? "0")).then(() => {
+      localStorage.setItem("honeypot" + markupId, "true");
+    });
+  };
+
   const loginContext = useContext(LoginContext);
   if (loginContext.loading) {
     return (
@@ -112,6 +130,29 @@ export const MarkupAssessments = () => {
   return (
     <div className={b()}>
       <div className={b("block")}>
+        <ButtonWithConfirm
+          handleSubmit={handleMakeHoneypot}
+          confirmText="Вы действительно хотите добавить этот маркап всем ассессорам?"
+          disabled={
+            !Boolean(assessments.filter((el) => el.is_prior).length) ||
+            Boolean(localStorage.getItem("honeypot" + markupId))
+          }
+        >
+          <Button
+            view="action"
+            disabled={
+              !Boolean(assessments.filter((el) => el.is_prior).length) ||
+              Boolean(localStorage.getItem("honeypot" + markupId))
+            }
+          >
+            Сделать ханипотом
+          </Button>
+          <p>
+            <CircleInfoFill /> Чтобы сделать разметку ханипотом, необходимо,
+            чтобы у него была оценка от администратора
+            <br />
+          </p>
+        </ButtonWithConfirm>
         <h1>Таблица оценок</h1>
         <Table columns={columns} data={assessmentsTableData}></Table>
         {pagination}
