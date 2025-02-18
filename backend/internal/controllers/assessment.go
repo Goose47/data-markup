@@ -86,6 +86,7 @@ func (con *Assessment) Index(c *gin.Context) {
 	if markupID > 0 {
 		tx = tx.Where("markup_id = ?", markupID)
 	}
+	tx = tx.Where("hash IS NOT NULL")
 	tx.Find(&assessments)
 
 	resp := make([]assessmentsResponse, len(assessments))
