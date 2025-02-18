@@ -90,11 +90,13 @@ export type UserType = {
 };
 
 export type AsseessmentType = {
+  id: number;
   user: UserType;
   is_prior: boolean;
   created_at: string;
   updated_at: string;
   hash: string;
+  markup_id?: number;
   fields: {
     id: number;
     assessment_id: number;
@@ -115,4 +117,14 @@ export type AsseessmentType = {
   };
   is_correct?: boolean;
   is_editable?: boolean;
+};
+
+export type UserListType = {
+  id: number;
+  email: string;
+  created_at: string;
+  assessment_count: number;
+  correct_assessment_count: number;
+  assessment_count2: number;
+  correct_assessment_count2: number;
 };

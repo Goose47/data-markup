@@ -5,7 +5,9 @@ $block: '.#{variables.$ns}home';
 #{$block} {
     width: 100%;
     padding-top: 15px;
+    max-width: 600px;;
     p {
+      line-height: 24px;
       font-size: 20px;
     }
 }
