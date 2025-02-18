@@ -79,9 +79,8 @@ func (con *Batch) Index(c *gin.Context) {
 		Offset(offset).
 		Order("created_at DESC")
 	if !isAdmin {
-		tx = tx.Where("user_id = ?", user.ID)
+		tx = tx.Where("user_id = ? AND is_honeypot IS false", user.ID)
 	}
-	tx = tx.Where("is_honeypot IS false")
 	tx.Find(&batches)
 
 	c.JSON(http.StatusOK, responses.Pagination(batches, total, page, perPage))
@@ -160,7 +159,7 @@ func (con *Batch) Find(c *gin.Context) {
 type storeBatchType struct {
 	Name     string `binding:"required" form:"name"`
 	Overlaps int    `binding:"required" form:"overlaps"`
-	Priority int    `binding:"required,gte=1,lte=10" form:"priority"`
+	Priority int    `binding:"required" form:"priority"`
 	TypeID   uint   `binding:"required" form:"type_id"`
 }
 
@@ -329,7 +328,7 @@ func (con *Batch) Store(c *gin.Context) {
 type updateBatchType struct {
 	Name     string `binding:"required" json:"name"`
 	Overlaps int    `binding:"required" json:"overlaps"`
-	Priority int    `binding:"required" json:"priority"`
+	Priority int    `binding:"required,gte=1,lte=10" json:"priority"`
 	TypeID   uint   `binding:"required" json:"type_id"`
 	IsActive *bool  `binding:"required" json:"is_active"`
 }
