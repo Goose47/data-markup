@@ -36,3 +36,13 @@ $block: '.#{variables.$ns}sidebar';
         }
     }
 }
+
+// @media (max-width: 1200px) {
+//     #{$block} {
+//         max-width: 0;
+//         overflow: hidden;
+//         flex: 0 0 0;
+//         padding: 0;
+        
+//     }
+// }

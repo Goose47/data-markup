@@ -21,3 +21,11 @@ $block: '.#{variables.$ns}my-markup-types';
     }
 
 }
+
+@media (max-width: 1200px) {
+    #{$block} {
+        &__list {
+            width: calc(100% - 60px);
+        }
+    }
+}

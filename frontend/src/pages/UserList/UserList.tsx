@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { block } from "../../utils/block";
 import "./UserList.scss";
 import { UserListType } from "../../utils/types";
 import { getAllProfiles } from "../../utils/requests";
-import { Table } from "@gravity-ui/uikit";
+import { Loader, Table } from "@gravity-ui/uikit";
+import { LoginContext } from "../Login/LoginContext";
 
 const b = block("user-list");
 
@@ -12,8 +13,9 @@ export const UserList = () => {
 
   useEffect(() => {
     getAllProfiles().then((data: UserListType[]) => {
+      if (!data.length) return;
       setUsers(
-        data.map((el) => {
+        data?.map((el) => {
           return {
             ...el,
             created_at: new Date(el.created_at).toLocaleString("ru-RU"),
@@ -46,6 +48,29 @@ export const UserList = () => {
       { id: "created_at", name: "Зарегистрирован" },
     ];
   }, []);
+
+  const loginContext = useContext(LoginContext);
+  if (loginContext.loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: 500,
+        }}
+      >
+        <Loader></Loader>
+      </div>
+    );
+  }
+  if (loginContext.userRole !== "admin") {
+    return (
+      <div className={b()}>
+        <h1>Отказано в доступе</h1>
+      </div>
+    );
+  }
 
   return (
     <div className={b()}>

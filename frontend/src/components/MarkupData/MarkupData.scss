@@ -2,6 +2,9 @@
 $block: '.#{variables.$ns}markup-data';
 
 #{$block} {
+    &__text {
+        max-width: 300px;
+    }
     &__image {
         max-width: 300px;
         height: auto;
@@ -15,6 +18,8 @@ $block: '.#{variables.$ns}markup-data';
         td, th {
             padding: 15px;
             min-width: 100px;
+            max-width: 300px;
+            word-break: break-all;
         }
 
     }

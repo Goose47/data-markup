@@ -6,6 +6,12 @@ $block: '.#{variables.$ns}app';
     display: flex;
     justify-content: center;
     align-items: center;
+    h1 {
+        line-height: 30px;
+    }
+    h2 {
+        line-height: 24px;
+    }
     margin: 0;
     &__wrapper {
         width: 1200px;
@@ -16,5 +22,22 @@ $block: '.#{variables.$ns}app';
     &__content {
         width: calc(100% - 400px);
         padding-top: 15px;
+    }
+}
+
+@media (max-width: 1200px) {
+    #{$block} {
+        display: block;
+        margin: 0;
+        &__wrapper {
+            box-sizing: border-box;
+            width: 100%;
+            display: block;
+            padding: 15px;
+        }
+        &__content {
+            width: 100%;
+            padding-top: 15px;
+        }
     }
 }

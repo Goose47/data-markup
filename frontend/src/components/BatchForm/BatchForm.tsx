@@ -132,7 +132,7 @@ export const BatchForm = ({
                   названий полей файла:
                   <pre>
                     <code>
-                      query_text title_text url_text description_text url_img
+                      query_text title_text url_url description_text url_img
                     </code>
                   </pre>
                 </>
@@ -141,13 +141,13 @@ export const BatchForm = ({
                 <>
                   Имена полей должны формироваться по следующему принципу:{" "}
                   <br></br>
-                  <b>{"{название_поля}{1|2}_{тип_данных}"}</b>. Пример
-                  корректных названий полей файла:
+                  <b>{"{название_поля}{1|2|3|4|5|6|7|8|9}_{тип_данных}"}</b>.
+                  Пример корректных названий полей файла:
                   <pre>
                     <code>
-                      query1_text title1_text url1_text description1_text
+                      query1_text title1_text url1_url description1_text
                       url1_img <br></br>
-                      query2_text title2_text url2_text description2_text
+                      query2_text title2_text url2_url description2_text
                       url2_img
                     </code>
                   </pre>
@@ -157,7 +157,7 @@ export const BatchForm = ({
               )}
               Поддерживаемые форматы в текущей версии:
               <ul>
-                <li>string</li>
+                <li>text</li>
                 <li>url</li>
                 <li>img</li>
               </ul>
