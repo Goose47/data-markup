@@ -7,6 +7,8 @@
 
 Сервис доступен по адресу [rwfshr.ru](https://rwfshr.ru)
 
+Решение-призер, 2-е место в хакатоне [AI Learning Lab 2025](https://ai-learninglab.itmo.ru/), трек Ecom.tech
+
 ## Примеры
 
 ### Добавление типа разметки
